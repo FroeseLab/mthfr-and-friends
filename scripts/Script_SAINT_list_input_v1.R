@@ -49,6 +49,19 @@ write.csv(data_SAINT_input, "data/interim/SAINT_list_input.csv", row.names = FAL
 
 
 
+#Crapome list ----
+#For manual retrieval of the Prey appearing in the crapome 
+#Input in "Workflow 1: Query proteins and retrieve profiles"at https://reprint-apms.org/?q=chooseworkflow
+data_crapome<-unique(data_SAINT_input$`#PreyName`)
+
+# Save the cleaned data to a new CSV file
+write.table(data_crapome, file="data/interim/crapome_input.csv", row.names = FALSE, col.names =FALSE, quote = FALSE)
+
+
+
+
+
+
 #Second SAINT input file ----
 
 # Modified input file where Empty vector is removed as a control
@@ -79,3 +92,14 @@ data_SAINT_input_RefSeq<-data_SAINT_input %>%
 write.csv(data_SAINT_input_RefSeq, "data/interim/SAINT_list_input_MTHFR_RefSeq.csv", row.names = FALSE, quote = FALSE)
 
 
+#Forth SAINT input file with modified acession numbers ----
+# Modified input file where Empty vector is removed as a control
+data_SAINT_input_control <- data_SAINT_input %>%
+  filter(`#BaitName_Condition` != "CONTROL")
+
+# Re-name MTHFR to CONTROL
+data_SAINT_input_control$`#BaitName_Condition` <- replace(data_SAINT_input_control$`#BaitName_Condition`, 
+                                                          data_SAINT_input_control$`#BaitName_Condition` == "MTHFR_38to656", "CONTROL")
+
+# Save the cleaned data to a new CSV file
+write.csv(data_SAINT_input_control, "data/interim/SAINT_list_input_MTHFR38to656_control.csv", row.names = FALSE, quote = FALSE)
