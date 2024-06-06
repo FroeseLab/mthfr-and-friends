@@ -6,10 +6,11 @@ library(DataCombine)
 library(UniProt.ws)
 library(gridExtra)
 library("ggrepel")
-
+library(UniProt.ws)
+library(UniprotR)
 library(STRINGdb)
-
-
+library(tidyverse)
+library(scrutiny )
 
 #Read the input file 
 # Data files ----
@@ -82,8 +83,8 @@ ggsave(
 
 ##SP vs FC-A facet ----
 plot_SP_FCA <- ggplot(data = data_SAINT_merged, aes(x = SP, y = FCA, label = PreyGene)) +
-  geom_hline(yintercept = 2, color="pink")+
-  annotate("text", x = 0.1, y = 2.2 , label = "FCA = 2", color="pink")+
+  geom_hline(yintercept = 2, color="lightblue")+
+  annotate("text", x = 0.1, y = 2.2 , label = "FCA = 2", color="lightblue")+
    geom_point(color="gray", show.legend = FALSE) +
   
   # #hihglight sample names
@@ -219,11 +220,31 @@ ggsave("plot_heatmaps.png",plot=plot_heatmaps,  height = 2000, width=3000, units
 #Modify data ----
 data_SAINT_merged_modified<- data_SAINT_merged
 
+
+
 ##Kinases -------------------------------------------------------------------------------
 data_kinases<-read.csv("data/raw/uniprot_kinases.csv",  header = TRUE, check.names = FALSE)
 data_SAINT_merged_modified<-data_SAINT_merged_modified %>%
-  mutate(kinase =data_SAINT_merged$PreyGene %in% data_kinases$gene_name )
+  mutate(kinase =data_SAINT_merged_modified$PreyGene %in% data_kinases$gene_name )
 #intersect(data_SAINT_merged$PreyGene,data_kinases$gene_name)
+
+#Kinase activators 
+#raw data obtained from https://amigo.geneontology.org/amigo/term/GO:0019207
+data_kinases_activator<-read.csv(file="data/raw/AmiGO_kinase_activator.csv",  header = FALSE,  check.names = FALSE)
+data_SAINT_merged_modified<-data_SAINT_merged_modified %>%
+  mutate(kinase_activator =data_SAINT_merged_modified$PreyGene %in% data_kinases_activator$V2 )
+#intersect(data_SAINT_merged$PreyGene,data_kinases$gene_name)
+
+
+# If you want to prioritize "kinase" over "kinase_activator" when both are TRUE
+data_SAINT_merged_modified <- data_SAINT_merged_modified %>%
+  mutate(merged_activity = case_when(
+    kinase == TRUE ~ "kinase",
+    kinase_activator == TRUE & kinase == FALSE ~ "kinase regulator activity",
+    TRUE ~ "FALSE"
+  ))
+
+
 
 
 ## STRING--------------------------------------------------------------------------------
@@ -238,28 +259,41 @@ dat_example = data.frame(list(genes= unique(data_SAINT_merged_modified$PreyGene)
 #Retrieve STRING accession ID for each gene name
 dat_examples_mapped = string_db$map(dat_example, 'genes')
 
-#Checks score for interactions between defined gene names, and re-formatting the file
-#Interactions contain combined gene neighborhood, fusion and co-occurrence
-data_string<- string_db$get_interactions(dat_examples_mapped$STRING_id) %>% 
+data_string <- string_db$get_interactions(dat_examples_mapped$STRING_id) %>%
   merge(dat_examples_mapped %>%
-          rename(from_gene=genes),
-        by.x='from', by.y='STRING_id') %>%
+          rename(from_gene = genes),
+        by.x = 'from',
+        by.y = 'STRING_id') %>%
   merge(dat_examples_mapped %>%
-          rename(to_gene=genes),
-        by.x='to', by.y='STRING_id')
+          rename(to_gene = genes),
+        by.x = 'to',
+        by.y = 'STRING_id')
+
 
 #Get only interactions with MTHFR
-data_STRING_MTHFR<-data_string %>%
-    unique() %>%
-    filter(from_gene=="MTHFR" | to_gene=="MTHFR") %>%
-    dplyr::select(c(combined_score, from_gene, to_gene)) %>%
-    # Reshape it to have the interacting gene
-    tidyr::gather('direction', 'gene',-combined_score ) %>%
-    filter(gene != 'MTHFR')
+data_STRING_MTHFR <- data_string %>%
+  unique() %>%
+  filter(from_gene == "MTHFR" | to_gene == "MTHFR") %>%
+  dplyr::select(c(combined_score, from_gene, to_gene)) %>%
+  # Reshape it to have the interacting gene
+  tidyr::gather('direction', 'gene', -combined_score) %>%
+  filter(gene != 'MTHFR')
 
-#Merge to input combined scores and direction of interaction 
-data_SAINT_merged_modified<- merge(data_SAINT_merged_modified,data_STRING_MTHFR, by.x ="PreyGene", by.y="gene", all=TRUE)
+ 
 
+
+#Merge to input combined scores and direction of interaction
+data_SAINT_merged_modified <- merge(
+  data_SAINT_merged_modified,
+  data_STRING_MTHFR,
+  by.x = "PreyGene",
+  by.y = "gene",
+  all = TRUE
+)
+
+#rename combined_score column 
+data_SAINT_merged_modified<-data_SAINT_merged_modified%>%
+  rename(STRING_score=combined_score)
 
 
 ##Crapome----------------------------------------------------------------------------------
@@ -284,12 +318,22 @@ data_SAINT_merged_modified<-merge(data_SAINT_merged_modified,data_crapome[,c('Ma
 data_SAINT_merged_modified = data_SAINT_merged_modified %>%
   mutate(is_not_crapome = crapome_frequency <= 0.5 | is.na(crapome_frequency))
 
+##Reorder ----
+# Reorder the data frame to highlight kinase, then no crapome and crapome in the back
+data_SAINT_merged_modified <- data_SAINT_merged_modified %>%
+  arrange(is_not_crapome) %>% # Change this to your desired ordering logic
+  arrange(merged_activity)
+
+#Reorder order of baits 
+data_SAINT_merged_modified$Bait=factor(data_SAINT_merged_modified$Bait, levels=c("MTHFR", "MTHFR_T34A", "MTHFR_38to656"
+))
+
 #Plotting ----------------------------------------------------------------------------
 
 ##SP vs FC-A facet old ----
 plot_SP_FCA <- ggplot(data = filter(data_SAINT_merged_modified), aes(x = SP, y = FCA, label = PreyGene)) +
-  geom_hline(yintercept = 2, color="pink")+
-  annotate("text", x = 0.1, y = 2.2 , label = "FCA = 2", color="pink")+
+  geom_hline(yintercept = 2, color="lightblue")+
+  annotate("text", x = 0.1, y = 2.2 , label = "FCA = 2", color="lightblue")+
   geom_point(data=filter(data_SAINT_merged_modified, crapome_frequency<=0.5),aes(size=combined_score), color="black", show.legend = FALSE) +
   geom_point(data=filter(data_SAINT_merged_modified, crapome_frequency>0.5),aes(size=combined_score), color="grey", show.legend = FALSE) +
   geom_point(data=filter(data_SAINT_merged_modified, kinase==TRUE), color="red", shape=4, show.legend = FALSE) +
@@ -335,10 +379,6 @@ ggsave(
   
 )
 
-(plot_SP_FCA
-  + coord_cartesian(xlim = c(0.75,1))
-  
-  )
 
 ##SP vs FC-A facet ----
 
@@ -357,7 +397,7 @@ ggplot(data = data_SAINT_merged_modified,
   scale_shape_manual(values = c(4, 18)) +
   coord_cartesian(xlim = c(0.75, 1), ylim = c(1, 10)) +
   geom_text_repel(
-    data = filter(pdat, FCA > 2 &
+    data = filter(data_SAINT_merged_modified, FCA > 2 &
                     (is_not_crapome) & SP > 0.95 | PreyGene == 'MTHFR', ),
     aes(label = PreyGene),
     color = 'black',
@@ -379,38 +419,37 @@ ggsave(
   
 )
 
-##SP vs FC-A facet Color  ----
+##Main Plot ----
 
 
-# Reorder the data frame to highlight kinase, then no crapome and crapome in the back
-data_SAINT_merged_modified <- data_SAINT_merged_modified %>%
-  arrange(is_not_crapome) %>% # Change this to your desired ordering logic
-  arrange(kinase)
 
-data_SAINT_merged_modified <- data_SAINT_merged_modified %>%
-  mutate(
-    nudge_x = ifelse(PreyGene %in% c("MTHFR"), 0, -0.05),
-    nudge_y = ifelse(PreyGene %in% c("MTHFR"), 0, 0.05)
-  )
-  
-ggplot(data = data_SAINT_merged_modified,
+ggplot(data = filter(data_SAINT_merged_modified),
        aes(
          x = SP,
          y = FCA,
          label = PreyGene,
          fill = is_not_crapome,
-         color = kinase
+         color = merged_activity
        )) +
+  
   facet_grid(~ Bait) +
   geom_point(size = 2,
              shape=21) +
-  scale_color_manual(values = c("FALSE" = "white", "TRUE" = "red"),
-                     labels = c("TRUE" = "Kinase", "FALSE"=" ")) +
+  
+  #Limits for high confidence interactions
+  geom_hline(yintercept = 2, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.77, y = 2.1 , label = "FCA = 2", color="lightblue")+
+  geom_vline(xintercept = 0.95, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.945, y = 9 , angle=90, label = "SP = 0.95", color="lightblue")+
+  
+  
+  scale_color_manual(values = c("FALSE" = "white", "kinase" = "red", "kinase regulator activity" ="green"),
+                     labels = c( "FALSE"=" ")) +
   scale_fill_manual(values = c("TRUE" = "black", "FALSE" = "gray"),
                     labels = c("TRUE" = "Not crapome", "FALSE" = "Crapome")) +
   coord_cartesian(xlim = c(0.75, 1), ylim = c(1, 10)) +
   geom_text_repel(
-    data = filter(pdat, FCA > 2 &
+    data = filter(data_SAINT_merged_modified, FCA > 2 &
                     (is_not_crapome) & SP > 0.95 | PreyGene == 'MTHFR' ),
     aes(label = PreyGene),
     color = 'black',
@@ -419,7 +458,7 @@ ggplot(data = data_SAINT_merged_modified,
     nudge_y = 0.05,
     nudge_x = -0.05,
     box.padding = 0.4,
-    
+    segment.colour = "darkgray",
   ) +
   scale_y_log10() +
   theme_bw()+
@@ -428,28 +467,132 @@ ggplot(data = data_SAINT_merged_modified,
          color = guide_legend(title = NULL))  # Remove the color legend title
 
 ggsave(
-  "plot_SP_FCA_modified_v2.png",
-  height = 2000,
-  width = 4000,
-  units = "px",
+  "plot_SP_FCA_modified_main.png",
+  height = 15,
+  width = 40,
+  units = "cm",
+  dpi=600,
   path ="data/output"
   
 )
 
 
-ggtitle("SAINT analysis")+
-  xlim(c(0,1))+
-  scale_y_continuous(trans='log10')+
-  theme(plot.title = element_text(hjust = 0.5),
-        panel.border = element_rect(colour = "black", fill = NA, linewidth = 0.5))
 
-plot_SP_FCA
+##Kinases ----
 
 
+
+
+
+
+ggplot(data = filter(data_SAINT_merged_modified, merged_activity != FALSE ),
+       aes(
+         x = SP,
+         y = FCA,
+         label = PreyGene,
+         fill = is_not_crapome,
+         color = merged_activity,
+    #     alpha = merged_activity
+       )) +
+  
+  
+  
+  
+  
+  facet_grid(~ Bait) +
+  geom_point(data = data_SAINT_merged_modified, aes(x = SP, y = FCA), color = "#f2f2f2") +
+  geom_point(size = 2,
+             shape=21) +
+  
+  #Limits for high confidence interactions
+  geom_hline(yintercept = 2, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.77, y = 2.1 , label = "FCA = 2", color="lightblue")+
+  geom_vline(xintercept = 0.95, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.945, y = 9 , angle=90, label = "SP = 0.95", color="lightblue")+
+  
+  
+  scale_color_manual(values = c("FALSE" = "white", "kinase" = "red", "kinase regulator activity" ="green"),
+                     labels = c( "FALSE"=" ")) +
+  scale_fill_manual(values = c("TRUE" = "black", "FALSE" = "gray"),
+                    labels = c("TRUE" = "Not crapome", "FALSE" = "Crapome")) +
+#scale_alpha_manual ( values =c("FALSE" = 0.1), breaks = waiver(), na.value = NA)+
+  coord_cartesian(xlim = c(0.75, 1), ylim = c(1, 10)) +
+  geom_text_repel(
+    data = filter(data_SAINT_merged_modified, FCA > 2  & SP > 0.95 & merged_activity !=FALSE  ),
+    aes(label = PreyGene),
+    color = 'black',
+    max.overlaps = 140,
+    size = 3,
+    nudge_y = 0.05,
+    nudge_x = -0.05,
+    box.padding = 0.4,
+    segment.colour = "darkgray",
+  ) +
+
+  scale_y_log10() +
+  theme_bw()+
+  labs(fill = NULL, color = NULL) +  # Remove legend titles
+  guides(fill = guide_legend(title = NULL),  # Remove the fill legend title
+         color = guide_legend(title = NULL))  # Remove the color legend title
 
 ggsave(
-  "plot_SP_FCA_modified.png",
-  plot = plot_SP_FCA,
+  "plot_SP_FCA_modified_kinase.png",
+  height = 15,
+  width = 40,
+  units = "cm",
+  dpi=600,
+  path ="data/output"
+  
+)
+
+
+
+##Crapome ----
+
+
+
+ggplot(data = data_SAINT_merged_modified,
+       aes(
+         x = SP,
+         y = FCA,
+         label = PreyGene,
+         fill = crapome_frequency,
+         color = merged_activity
+       )) +
+  
+  geom_hline(yintercept = 2, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.77, y = 2.1 , label = "FCA = 2", color="lightblue")+
+  geom_vline(xintercept = 0.95, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.94, y = 9 , angle=90, label = "SP = 0.95", color="lightblue")+
+  
+  
+  facet_grid(~ Bait) +
+  geom_point(size = 2,
+             shape=21) +
+  scale_color_manual(values = c("FALSE" = "white", "kinase" = "red", "kinase regulator activity" ="green"),
+                     labels = c( "FALSE"=" ")) +
+  scale_fill_gradient(low="green", high="red", na.value = "black") +
+              
+  coord_cartesian(xlim = c(0.75, 1), ylim = c(1, 10)) +
+  # geom_text_repel(
+  #   data = filter(data_SAINT_merged_modified, kinase==TRUE),
+  #   aes(label = PreyGene),
+  #   color = 'black',
+  #   max.overlaps = 140,
+  #   size = 3,
+  #   nudge_y = 0.05,
+  #   nudge_x = -0.1,
+  #   box.padding = 1,
+    
+  #) +
+  scale_y_log10() +
+  theme_bw()+
+  labs(fill = NULL, color = NULL) +  # Remove legend titles
+  guides(fill = guide_legend(title = NULL),  # Remove the fill legend title
+         color = guide_legend(title = NULL))  # Remove the color legend title
+
+ggsave(
+  "plot_SP_FCA_modified_crapome_gradient.png",
   height = 2000,
   width = 4000,
   units = "px",
@@ -457,6 +600,196 @@ ggsave(
   
 )
 
+
+ggplot(data = filter(data_SAINT_merged_modified),
+       aes(
+         x = SP,
+         y = FCA,
+         label = PreyGene,
+         fill = is_not_crapome,
+         color = merged_activity
+       )) +
+  
+  facet_grid(~ Bait) +
+  geom_point(size = 2,
+             shape=21) +
+  
+  #Limits for high confidence interactions
+  geom_hline(yintercept = 2, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.77, y = 2.1 , label = "FCA = 2", color="lightblue")+
+  geom_vline(xintercept = 0.95, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.945, y = 9 , angle=90, label = "SP = 0.95", color="lightblue")+
+  
+  
+  scale_color_manual(values = c("FALSE" = "white", "kinase" = "red", "kinase regulator activity" ="green"),
+                     labels = c( "FALSE"=" ")) +
+  scale_fill_manual(values = c("TRUE" = "black", "FALSE" = "gray"),
+                    labels = c("TRUE" = "Not crapome", "FALSE" = "Crapome")) +
+  coord_cartesian(xlim = c(0.75, 1), ylim = c(1, 10)) +
+  
+  scale_y_log10() +
+  theme_bw()+
+  labs(fill = NULL, color = NULL) +  # Remove legend titles
+  guides(fill = guide_legend(title = NULL),  # Remove the fill legend title
+         color = guide_legend(title = NULL))  # Remove the color legend title
+
+ggsave(
+  "plot_SP_FCA_modified_crapome.png",
+  height = 15,
+  width = 40,
+  units = "cm",
+  dpi=600,
+  path ="data/output"
+  
+)
+
+
+
+##STRING  ----
+
+# Temporarely 
+ data_SAINT_merged_modified %>%
+  arrange(STRING_score) %>% # Change this to your desired ordering logic
+  arrange(merged_activity) %>%
+  filter(STRING_score != FALSE)%>%
+  
+ggplot(data = ,
+       aes(
+         x = SP,
+         y = FCA,
+         label = PreyGene,
+         fill = STRING_score,
+         color = merged_activity
+       )) +
+  
+  facet_grid(~ Bait) +
+ geom_point(data = data_SAINT_merged_modified, aes(x = SP, y = FCA), color = "#f2f2f2") +
+  geom_point(size = 2,
+             shape=21) +
+  
+  #Limits for high confidence interactions
+  geom_hline(yintercept = 2, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.77, y = 2.1 , label = "FCA = 2", color="lightblue")+
+  geom_vline(xintercept = 0.95, color="lightblue", linetype="dashed")+
+  annotate("text", x = 0.945, y = 9 , angle=90, label = "SP = 0.95", color="lightblue")+
+  
+  
+  scale_color_manual(values = c("FALSE" = "white", "kinase" = "red", "kinase regulator activity" ="green"),
+                     labels = c( "FALSE"=" ")) +
+  scale_fill_gradient(low="gray", high="purple", na.value = "black") +
+  coord_cartesian(xlim = c(0.75, 1), ylim = c(1, 10)) +
+  geom_text_repel(
+    data = filter(data_SAINT_merged_modified, FCA > 2 &
+                     SP > 0.95 & STRING_score !=FALSE ),
+    aes(label = PreyGene),
+    color = 'black',
+    max.overlaps = 140,
+    size = 3,
+    nudge_y = 0.05,
+    nudge_x = -0.05,
+    box.padding = 0.4,
+    segment.colour = "darkgray",
+  ) +
+  scale_y_log10() +
+  theme_bw()+
+  labs(fill = NULL, color = NULL) +  # Remove legend titles
+  guides(fill = guide_legend(title = "STRING score"),
+         color = guide_legend(title = NULL))  # Remove the color legend title
+
+ggsave(
+  "plot_SP_FCA_modified_STRING.png",
+  height = 15,
+  width = 40,
+  units = "cm",
+  dpi=600,
+  path ="data/output"
+  
+)
+
+
+
+
+
+##Uniprot ----
+#filter out prey genes that are significant according to parameters
+data_significant_Prey<-data_SAINT_merged_modified %>%
+filter( FCA>=2, SP > 0.95)
+ #single out names  
+data_significant_Prey<-unique(data_significant_Prey$Prey)
+
+#test function
+#GetProteinGOInfo("P42898")
+#GetProteinAnnontate("P42898", columns="gene_synonym")
+#?GetProteinAnnontate()
+
+#Retrive infromation form UNIPROT
+#More Uniprot columns can be found here https://www.uniprot.org/help/return_fields 
+data_uniprot<-GetProteinAnnontate(data_significant_Prey, columns=c("gene_primary","gene_names" , "protein_name",  "cc_function", "cc_pathway", "go"))
+
+#Separate out protein name
+data_uniprot<-data_uniprot%>%
+  mutate(protein_sep=before_parens(data_uniprot$Protein.names, sep = "parens"))
+
+#Save data file 
+write.csv(data_uniprot,"data/output/significant_prey_uniprot.csv")
+
+
+##Heatmap ----
+#Set up plot settings
+plot_heatmap <- ggplot(data = filter(data_SAINT_merged_modified, Prey %in% data_significant_Prey) ,
+                       aes(x = Bait, y = PreyGene)) +
+  #Gradient scale
+  scale_fill_gradient(
+    low = "blue",
+    high = "red",
+    guide = guide_colorbar(
+      direction = "horizontal",
+      title.position = "top",
+      title.hjust = 0.5,
+      label.position = "bottom",
+      ticks = TRUE
+    ),
+  ) +
+  #Theme
+  scale_x_discrete(expand = c(0, 0)) +  # Remove space on the x-axis
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = -45, hjust = 0),
+    # Tilt x-axis title
+    legend.position = "top",
+    legend.title = element_text(angle = 0, vjust = 1),
+    legend.text = element_text(angle = 0),
+    panel.background = element_rect(fill = "white"),
+    # Gray background
+    panel.grid.major = element_blank(),
+    # No major grid lines
+    panel.grid.minor = element_blank(),
+    # No minor grid lines
+    panel.border = element_rect(color = "black", fill = NA),
+    # Box around the plot
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+  )
+
+#Generate different plots visualising different SAINT results 
+plot_heatmap_FCA<-plot_heatmap +
+  geom_tile(aes(fill=FCA))
+plot_heatmap_FCA
+
+plot_heatmap_SP<-plot_heatmap +
+  geom_tile(aes(fill=SP)) 
+plot_heatmap_SP
+
+plot_heatmap_Abundance<-plot_heatmap +
+  geom_tile(aes(fill=Abundance))   
+plot_heatmap_Abundance
+
+
+
+
+#visualise all plots together
+plot_heatmaps<-grid.arrange(plot_heatmap_FCA, plot_heatmap_SP, plot_heatmap_Abundance, nrow=1)
+ggsave("plot_heatmaps_modified.png",plot=plot_heatmaps,  height = 2000, width=3000, units = "px", path ="data/output" )
 
 
 

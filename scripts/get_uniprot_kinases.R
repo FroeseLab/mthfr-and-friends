@@ -1,5 +1,6 @@
 library(httr)
 library(readr)
+library(xml2)
 
 
 endpoint <- "http://sparql.uniprot.org/sparql"
@@ -17,8 +18,8 @@ WHERE
         up:reviewed true  ;
         # Here we query for 'human' proteins
         up:organism taxon:9606 ;
-        # That are classified to have the GO term 'Kinase activity'
-        up:classifiedWith|(up:classifiedWith/rdfs:subClassOf) GO:0016301 ;
+        # That are classified to have the GO term 'protein Kinase activity'
+        up:classifiedWith|(up:classifiedWith/rdfs:subClassOf) GO:0004672 ;
         up:encodedBy ?gene .
         ?gene skos:prefLabel ?gene_name .
          BIND(SUBSTR(STR(?protein),33) AS ?accession)
