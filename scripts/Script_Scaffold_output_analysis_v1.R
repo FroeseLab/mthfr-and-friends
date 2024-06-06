@@ -5,6 +5,9 @@ library(stringr)
 library(UniProt.ws)
 library(gridExtra)
 library("ggrepel")
+library(DataCombine)
+library(UpSetR)
+
 
 #Read the input file 
 # Data files ----
@@ -100,6 +103,8 @@ plot_scaffold
    ggsave("Plot_scaffold_output_filter.png",plot=plot_scaffold_filter,  height = 2000, width=2000, units = "px", path =getwd() )
    
    
-   
+   #Ven----
+   upsetSamples(miniACC)
+   ??upsetSamples
    
    

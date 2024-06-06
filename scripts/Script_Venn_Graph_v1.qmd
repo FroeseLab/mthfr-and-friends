@@ -1,0 +1,236 @@
+---
+title: "VennDiagrams"
+author: "Linnea Blomgren"
+format: html
+editor: visual
+---
+
+# My upseting plots
+
+```{r}
+library(UpSetR)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+#library(ggupset)
+#Read th#Read the input file 
+# Data files ----
+getwd()
+```
+
+```{r}
+
+
+#Prepare raw Input data ------------------------------------------------------------
+#Import raw csv file. Manually converted from output Scaffold .txt file prior. 
+data_raw_SAINT_input<- read.csv("../data/interim/SAINT_list_input.csv",  header = TRUE, check.names = FALSE) #it is just the E1 SYPRO 5x from the original raw data from 220420
+
+
+
+listInput = data_raw_SAINT_input %>%
+  split(.$`#BaitName_Condition`) %>%
+  lapply(function(x) x$`#PreyName`)
+length(listInput)
+```
+
+### Generate Diagram of raw data
+
+```{r}
+#| fig-width: 13
+#| fig-height: 12
+upset_plot_SAINT_input <- upset(
+  fromList(listInput),
+  order.by = "freq",
+  text.scale = c(2, 2, 2, 1.5, 2, 1.5)*2 ,
+  point.size = 10,
+  line.size = 5,
+  sets.x.label = "Set Size",
+  # Adjust this to change the size of the dots in the matrix
+  sets.bar.color = "gray",
+  # Customize as needed
+  main.bar.color = "darkgray",
+  # Customize as needed
+  matrix.color = "black"
+) # Customize as needed)
+upset_plot_SAINT_input
+```
+
+```{r Save the plot}
+# Open a PNG device
+png(filename = "../data/output/upset_plot_SAINT_input.png",   height = 12,
+    width = 13,
+    units = "in", res=300)
+upset_plot_SAINT_input
+# Close the device
+dev.off()
+```
+
+### Generate Diagram of SAINT output data
+
+```{r}
+#Prepare SAINT Input data ------------------------------------------------------------
+data_raw_SAINT_output<- read.table("../data/raw/21262.output.tsv",  header = TRUE, check.names = FALSE) 
+
+listInput_output = data_raw_SAINT_output %>%
+  split(.$`Bait`) %>%
+  lapply(function(x) x$Prey)
+
+# Remove the Bait element from the list
+listInput_output <- listInput_output[!names(listInput_output) %in% "Bait"]
+
+
+
+```
+
+```{r}
+#| fig-width: 13
+#| fig-height: 12
+#Generate Diagaram of raw data 
+upset_plot_SAINT_output <- upset(
+  fromList(listInput_output),
+    order.by = "freq",
+  text.scale = c(2, 2, 2, 1.5, 2, 1.5)*2 ,
+  point.size = 10,
+  line.size = 5,
+  sets.x.label = "Set Size",
+  # Adjust this to change the size of the dots in the matrix
+  sets.bar.color = "gray",
+  # Customize as needed
+  main.bar.color = "darkgray",
+  # Customize as needed
+  matrix.color = "black"
+) # Customize as needed)
+upset_plot_SAINT_output
+
+```
+
+```{r}
+
+
+# Open a PNG device
+png(filename = "../data/output/upset_SAINT_output.png", height = 12,
+    width = 13,
+    units = "in", res=300)
+upset_plot_SAINT_output
+# Close the device
+dev.off()
+
+```
+
+### Generate Diagram of SAINT output data filtered
+
+```{r}
+#Prepare SAINT Input data ------------------------------------------------------------ 
+
+#SAINT raw data---
+#Import raw .tsv file of the "raw SAINT results". When downloaded a .output file isgiven. Just add .tsv file format 
+data_raw_SAINT<- read.table("../data/raw/21262.output.tsv",  header = TRUE, check.names = FALSE) 
+#Import the unfiltered matrix from "Bait-prey heatmap" tab. Downloaded as a .tab file. Just add .tsv file format
+data_baitPrey<-read.table("../data/raw/21262_baitPrey_data.tab.tsv",  header = TRUE, check.names = FALSE) 
+
+#Merge SAINT files 
+#Note preys that are found in raw data but not found in bait-prey data will not be merged. E.g. A0A075B6S2
+data_SAINT_merged<-  merge(data_raw_SAINT,data_baitPrey)
+
+#Filter SAINT output data based onf F
+
+listInput_output = data_SAINT_merged %>%
+  filter(SP>0.50) %>%
+  split(.$`Bait`) %>%
+  lapply(function(x) x$Prey)
+
+
+
+
+# Remove the Bait element from the list
+#listInput_output <- listInput_output[!names(listInput_output) %in% "Bait"]
+
+
+
+
+
+
+
+ 
+```
+
+```{r}
+#| fig-width: 13
+#| fig-height: 12
+
+upset_plot_SAINT_output <- upset(
+fromList(listInput_output),
+order.by = "freq",
+text.scale = c(2, 2, 2, 1.5, 2, 1.5) * 2 ,
+point.size = 10,
+line.size = 5,
+sets.x.label = "Set Size",
+# Adjust this to change the size of the dots in the matrix   
+sets.bar.color = "gray",   # Customize as needed   
+main.bar.color = "darkgray",   # Customize as needed   
+matrix.color = "black" ) # Customize as needed) 
+upset_plot_SAINT_output 
+```
+
+#Generate Diagaram of raw data upset_plot_SAINT_output \<- upset( fromList(listInput_output), order.by = "freq", text.scale = c(2, 2, 2, 1.5, 2, 1.5)\*2 , point.size = 10, line.size = 5, sets.x.label = "Set Size", \# Adjust this to change the size of the dots in the matrix sets.bar.color = "gray", \# Customize as needed main.bar.color = "darkgray", \# Customize as needed matrix.color = "black" ) \# Customize as needed) upset_plot_SAINT_output
+
+```{r}
+# Open a PNG device
+png(filename = "../data/output/upset_SAINT_output_FDR_0.1.png", height = 12,
+    width = 13,
+    units = "in", res=300)
+upset_plot_SAINT_output
+# Close the device
+dev.off()
+
+```
+
+### 
+
+```{r}
+
+#Filter SAINT output data based onf F
+
+listInput_output = data_raw_SAINT_output %>%
+  filter(FDR<=0.1) %>%
+  split(.$`Bait`) %>%
+  lapply(function(x) x$Prey)
+
+# Remove the Bait element from the list
+listInput_output <- listInput_output[!names(listInput_output) %in% "Bait"]
+
+```
+
+```{r}
+#| fig-width: 13
+#| fig-height: 12
+#Generate Diagaram of raw data 
+upset_plot_SAINT_output <- upset(
+  fromList(listInput_output),
+   order.by = "freq",
+  text.scale = c(2, 2, 2, 1.5, 2, 1.5)*2 ,
+  point.size = 10,
+  line.size = 5,
+  sets.x.label = "Set Size",
+  # Adjust this to change the size of the dots in the matrix
+  sets.bar.color = "gray",
+  # Customize as needed
+  main.bar.color = "darkgray",
+  # Customize as needed
+  matrix.color = "black"
+) # Customize as needed)
+upset_plot_SAINT_output
+
+
+```
+
+```{r}
+
+# Open a PNG device
+png(filename = "../data/output/upset_SAINT_output_FDR_0.1.png", height = 12,
+    width = 13,
+    units = "in", res=300)
+upset_plot_SAINT_output
+# Close the device
+dev.off()
+```
