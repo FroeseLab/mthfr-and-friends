@@ -76,7 +76,7 @@ upset_plot_SAINT_input
 dev.off()
 ```
 
-### Generate Diagram of SAINT output data
+### Generate Diagram of SAINT output data \[not in article\]
 
 ```{r}
 #Prepare SAINT Input data ------------------------------------------------------------
@@ -216,5 +216,5 @@ dev.off()
 
 ```
 
-```{}
+```         
 ```

@@ -42,57 +42,11 @@ data_SAINT_input <- data_SAINT_input %>% filter(!grepl("\\|", `#PreyName`))
 data_SAINT_input<-FindReplace(data_SAINT_input, "#BaitName_Condition", data_rename, from = "#BaitName_Condition_old", to = "#BaitName_Condition_new", exact = TRUE, vector = FALSE)
 data_SAINT_input<-FindReplace(data_SAINT_input, "#APName", data_rename, from = "#APName_old", to = "#APName_new", exact = TRUE, vector = FALSE)
 
-# Save data ----
+## Save data ----
 # Save the cleaned data to a new CSV file
 write.csv(data_SAINT_input, "data/interim/SAINT_list_input.csv", row.names = FALSE, quote = FALSE)
 
-
-
-
-#Crapome list ----
-#For manual retrieval of the Prey appearing in the crapome 
-#Input in "Workflow 1: Query proteins and retrieve profiles"at https://reprint-apms.org/?q=chooseworkflow
-data_crapome<-unique(data_SAINT_input$`#PreyName`)
-
-# Save the cleaned data to a new CSV file
-write.table(data_crapome, file="data/interim/crapome_input.csv", row.names = FALSE, col.names =FALSE, quote = FALSE)
-
-
-
-
-
-
-#Second SAINT input file ----
-
-# Modified input file where Empty vector is removed as a control
-data_SAINT_input_control <- data_SAINT_input %>%
-  filter(`#BaitName_Condition` != "CONTROL")
-
-# Re-name MTHFR to CONTROL
-data_SAINT_input_control$`#BaitName_Condition` <- replace(data_SAINT_input_control$`#BaitName_Condition`, 
-                                                          data_SAINT_input_control$`#BaitName_Condition` == "MTHFR", "CONTROL")
-
-# Save the cleaned data to a new CSV file
-write.csv(data_SAINT_input_control, "data/interim/SAINT_list_input_MTHFR_control.csv", row.names = FALSE, quote = FALSE)
-
-
-#Third SAINT input file with modified acession numbers ----
-#Retrieve gene names using mapUniProt
-data_accession_names<-mapUniProt( from="UniProtKB_AC-ID", to='RefSeq_Protein', query=unique(data_SAINT_input$`#PreyName`) )
-#allToKeys() #check which types of accession names we can retrieve 
-
-#Add column gene_name for converted Uniprot accession numbers to Gene names
-#Note seems like some aceession numers from Uniprot can not be found in RefSeq
-data_SAINT_input_RefSeq<-data_SAINT_input %>%
-  mutate('#PreyName'=
-           FindReplace(data_SAINT_input, '#PreyName', data_accession_names, from = "From", to = "To", exact = TRUE, vector = TRUE))
-
-# Save the cleaned data to a new CSV file
-#Note Even with this modification, the SAINT analysis fail with crapome 
-write.csv(data_SAINT_input_RefSeq, "data/interim/SAINT_list_input_MTHFR_RefSeq.csv", row.names = FALSE, quote = FALSE)
-
-
-#Forth SAINT input file with modified acession numbers ----
+#SAINT input file with MTHFR38to656 as control ----
 # Modified input file where Empty vector is removed as a control
 data_SAINT_input_control <- data_SAINT_input %>%
   filter(`#BaitName_Condition` != "CONTROL")
@@ -100,6 +54,16 @@ data_SAINT_input_control <- data_SAINT_input %>%
 # Re-name MTHFR to CONTROL
 data_SAINT_input_control$`#BaitName_Condition` <- replace(data_SAINT_input_control$`#BaitName_Condition`, 
                                                           data_SAINT_input_control$`#BaitName_Condition` == "MTHFR_38to656", "CONTROL")
-
+## Save data ----
 # Save the cleaned data to a new CSV file
 write.csv(data_SAINT_input_control, "data/interim/SAINT_list_input_MTHFR38to656_control.csv", row.names = FALSE, quote = FALSE)
+
+
+#Crapome list ----
+#For manual retrieval of the Prey appearing in the crapome 
+#Input in "Workflow 1: Query proteins and retrieve profiles"at https://reprint-apms.org/?q=chooseworkflow
+data_crapome<-unique(data_SAINT_input$`#PreyName`)
+
+## Save data ----
+# Save the cleaned data to a new CSV file
+write.table(data_crapome, file="data/interim/crapome_input.csv", row.names = FALSE, col.names =FALSE, quote = FALSE)

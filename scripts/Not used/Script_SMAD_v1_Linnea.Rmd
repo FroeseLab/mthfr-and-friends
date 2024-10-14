@@ -1,0 +1,395 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+#Initiate 
+```{r}
+# if (!require("BiocManager", quietly = TRUE))
+#     install.packages("BiocManager")
+# 
+# BiocManager::install("SMAD")
+
+library(RcppAlgos)
+library(SMAD)
+library(ggplot2)
+library(dplyr)
+
+#Read the input file 
+# Data files ----
+getwd()
+# Set directory 
+setwd(getwd())
+
+#Import csv file 
+TestDatInput <- read.csv("SMAD_input.csv") #it is just the E1 SYPRO 5x from the original raw data from 220420
+
+#data("TestDatInput")
+head(TestDatInput)
+```
+#scoreCompPASS
+```{r}
+
+## ----echo=TRUE, message=FALSE, warning=FALSE----------------------------------
+scoreCompPASS <- CompPASS(TestDatInput)
+head(scoreCompPASS)
+
+```
+#Original script plots
+```{r}
+
+
+
+
+## ----CompPASS output figure, echo=FALSE, fig.height=7, fig.width=7, message=FALSE, warning=FALSE, paged.print=FALSE----
+par(mfrow = c(2, 2))
+
+
+plot(sort(scoreCompPASS$scoreZ, decreasing = TRUE), pch = 16,
+     xlab = "Ranked bait-prey interactions",
+     ylab = "Z-score")
+plot(sort(scoreCompPASS$scoreS, decreasing = TRUE), pch = 16,
+     xlab = "Ranked bait-prey interactions",
+     ylab = "S-score")
+plot(sort(scoreCompPASS$scoreD, decreasing = TRUE), pch = 16,
+     xlab = "Ranked bait-prey interactions",
+     ylab = "D-score")
+plot(sort(scoreCompPASS$scoreWD, decreasing = TRUE), pch = 16,
+     xlab = "Ranked bait-prey interactions",
+     ylab = "WD-score")
+```
+
+
+
+
+
+#GGPLOTS
+```{r}
+#------------------------------------------------------------------
+# Z-Score
+
+df_Z <- data.frame(
+  Rank = 1:nrow(scoreCompPASS),
+  ScoreZ = sort(scoreCompPASS$scoreZ, decreasing = TRUE, na.last = TRUE)
+)
+
+# Plot using ggplot
+ggplot_Z<- ggplot(df_Z, aes(x = Rank, y = ScoreZ)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked bait-prey interactions",
+    y = "Z-score"
+  ) +
+  
+  theme_minimal()  # Optional: Adds a minimalistic theme to the plot
+print(ggplot_Z)
+ggsave("Plot_Z-score.tiff",plot=ggplot,  height = 2000, width=2000, units = "px", path =getwd() )
+
+
+#------------------------------------------------------------------
+# S-Score
+
+df_S <- data.frame(
+  Rank = 1:nrow(scoreCompPASS),
+  S_Score = sort(scoreCompPASS$scoreS, decreasing = TRUE, na.last = TRUE)
+)
+
+# Create the plot using ggplot
+ggplot_S <- ggplot(df_S, aes(x = Rank, y = S_Score)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked bait-prey interactions",
+    y = "S-score"
+  ) +
+  theme_minimal()
+
+# Display the plot
+print(ggplot_S)
+
+# Save the plot
+ggsave("Plot_S-score.tiff", plot = ggplot_S, height = 2000, width = 2000, units = "px", path = getwd())
+
+#------------------------------------------------------------------
+# D-score
+
+df_D <- data.frame(
+  Rank = 1:nrow(scoreCompPASS),
+  D_Score = sort(scoreCompPASS$scoreD, decreasing = TRUE, na.last = TRUE)
+)
+
+# Create the plot using ggplot
+ggplot_D <- ggplot(df_D, aes(x = Rank, y = D_Score)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked bait-prey interactions",
+    y = "D-score"
+  ) +
+  theme_minimal()
+
+# Display the plot
+print(ggplot_D)
+
+# Save the plot
+ggsave("Plot_D-score.tiff", plot = ggplot_D, height = 2000, width = 2000, units = "px", path = getwd())
+
+#------------------------------------------------------------------
+# WD-score 
+
+df_WD <- data.frame(
+  Rank = 1:nrow(scoreCompPASS),
+  WD_Score = sort(scoreCompPASS$scoreWD, decreasing = TRUE, na.last = TRUE)
+)
+
+# Create the plot using ggplot
+ggplot_WD <- ggplot(df_WD, aes(x = Rank, y = WD_Score)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked bait-prey interactions",
+    y = "WD-score"
+  ) +
+  theme_minimal()
+
+# Display the plot
+print(ggplot_WD)
+
+# Save the plot
+ggsave("Plot_WD-score.tiff", plot = ggplot_WD, height = 2000, width = 2000, units = "px", path = getwd())
+
+
+
+```
+#Highlight proteins
+
+```{r}
+
+
+# Define the highlight IDs and their corresponding names
+highlight_ids <- c("P42898", "P11586", "Q92616")
+highlight_names <- c("MTHFR", "MTHFD1", "GCN1")  # Replace "OtherName" with actual corresponding name
+
+# Create a named vector for the highlight labels
+highlight_labels <- setNames(paste(highlight_ids, highlight_names, sep = " - "), highlight_ids)
+
+
+```
+
+
+#Highlight samples Z
+```{r}
+
+# Assuming `scoreCompPASS` is your dataframe
+scoreCompPASS <- scoreCompPASS %>%
+  arrange(desc(scoreZ))  # Sort by scoreZ
+
+# Create a new dataframe for ggplot with sorted scoreZ
+df_Z <- data.frame(
+  Rank = 1:nrow(scoreCompPASS),
+  ScoreZ = sort(scoreCompPASS$scoreZ, decreasing = TRUE, na.last = TRUE)
+)
+
+# Find the rows for idPrey and add the labels
+data_highlight <- scoreCompPASS %>%
+  filter(idPrey %in% highlight_ids) %>%
+  mutate(
+    Rank = match(scoreZ, df_Z$ScoreZ),  # Find corresponding ranks
+    Label = highlight_labels[idPrey]  # Add the labels
+  )
+
+# Plot using ggplot
+ggplot_Z <- ggplot(df_Z, aes(x = Rank, y = ScoreZ)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked bait-prey interactions",
+    y = "Z-score",
+    title = "Z Score"  # Adding the title here
+  ) +
+  geom_point(data = data_highlight, aes(x = Rank, y = scoreZ, color = Label), shape = 16) +
+  theme_minimal() +
+   theme(
+    plot.title = element_text(hjust = 0.5)  # Centering the title
+  )# Optional: Adds a minimalistic theme to the plot
+
+# Display the plot
+print(ggplot_Z)
+
+# Save the plot
+ggsave("Plot_Z-score_highlighted.tiff", plot = ggplot_Z, height = 2000, width = 2000, units = "px", path = getwd())
+
+```
+
+
+#Highlight samples S
+```{r}
+ 
+scoreCompPASS <- scoreCompPASS %>%
+  arrange(desc(scoreS))  # Sort by scoreS
+
+# Create a new dataframe for ggplot with sorted scoreS
+df_S <- data.frame(
+  Rank = 1:nrow(scoreCompPASS),
+  S_Score = sort(scoreCompPASS$scoreS, decreasing = TRUE, na.last = TRUE)
+)
+
+
+# Find the rows for idPrey and add the labels
+data_highlight_S <- scoreCompPASS %>%
+  filter(idPrey %in% highlight_ids) %>%
+  mutate(
+    Rank = match(scoreS, df_S$S_Score),  # Find corresponding ranks
+    Label = highlight_labels[idPrey]  # Add the labels
+  )
+
+# Plot using ggplot
+ggplot_S <- ggplot(df_S, aes(x = Rank, y = S_Score)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked bait-prey interactions",
+    y = "S-score",
+    title = "S Score"  # Adding the title here
+  ) +
+  geom_point(data = data_highlight_S, aes(x = Rank, y = scoreS, color = Label), shape = 16) +
+  theme_minimal()+
+   theme(
+    plot.title = element_text(hjust = 0.5)  # Centering the title
+  ) # Optional: Adds a minimalistic theme to the plot
+
+# Display the plot
+print(ggplot_S)
+
+# Save the plot
+ggsave("Plot_S-score_highlighted.tiff", plot = ggplot_S, height = 2000, width = 2000, units = "px", path = getwd())
+```
+
+#Highlight samples D
+```{r}
+scoreCompPASS <- scoreCompPASS %>%
+  arrange(desc(scoreD))  # Sort by scoreD
+
+# Create a new dataframe for ggplot with sorted scoreD
+df_D <- data.frame(
+  Rank = 1:nrow(scoreCompPASS),
+  D_Score = sort(scoreCompPASS$scoreD, decreasing = TRUE, na.last = TRUE)
+)
+
+# Find the rows for idPrey and add the labels
+data_highlight_D <- scoreCompPASS %>%
+  filter(idPrey %in% highlight_ids) %>%
+  mutate(
+    Rank = match(scoreD, df_D$D_Score),  # Find corresponding ranks
+    Label = highlight_labels[idPrey]  # Add the labels
+  )
+
+# Plot using ggplot
+ggplot_D <- ggplot(df_D, aes(x = Rank, y = D_Score)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked bait-prey interactions",
+    y = "D-score",
+    title = "D Score"  # Adding the title here
+  ) +
+  geom_point(data = data_highlight_D, aes(x = Rank, y = scoreD, color = Label), shape = 16) +
+  theme_minimal() +
+   theme(
+    plot.title = element_text(hjust = 0.5)  # Centering the title
+  ) # Optional: Adds a minimalistic theme to the plot
+
+# Display the plot
+print(ggplot_D)
+
+# Save the plot
+ggsave("Plot_D-score_highlighted.tiff", plot = ggplot_D, height = 2000, width = 2000, units = "px", path = getwd())
+```
+
+
+#Highlight samples WD
+```{r}
+scoreCompPASS <- scoreCompPASS %>%
+  arrange(desc(scoreWD))  # Sort by scoreWD
+
+# Create a new dataframe for ggplot with sorted scoreWD
+df_WD <- data.frame(
+  Rank = 1:nrow(scoreCompPASS),
+  WD_Score = sort(scoreCompPASS$scoreWD, decreasing = TRUE, na.last = TRUE)
+)
+
+# Find the rows for idPrey and add the labels
+data_highlight_WD <- scoreCompPASS %>%
+  filter(idPrey %in% highlight_ids) %>%
+  mutate(
+    Rank = match(scoreWD, df_WD$WD_Score),  # Find corresponding ranks
+    Label = highlight_labels[idPrey]  # Add the labels
+  )
+
+# Plot using ggplot
+ggplot_WD <- ggplot(df_WD, aes(x = Rank, y = WD_Score)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked bait-prey interactions",
+    y = "WD-score",
+    title = "WD Score"  # Adding the title here
+  ) +
+  geom_point(data = data_highlight_WD, aes(x = Rank, y = scoreWD, color = Label), shape = 16) +
+  theme_minimal() +
+   theme(
+    plot.title = element_text(hjust = 0.5)  # Centering the title
+  ) # Optional: Adds a minimalistic theme to the plot
+
+# Display the plot
+print(ggplot_WD)
+
+# Save the plot
+ggsave("Plot_WD-score_highlighted.tiff", plot = ggplot_WD, height = 2000, width = 2000, units = "px", path = getwd())
+```
+
+
+
+#scoreHG 
+```{r}
+scoreHG <- HG(TestDatInput)
+head(scoreHG)
+
+## ----HG output figure, echo=FALSE, fig.height=7, fig.width=7, message=FALSE, warning=FALSE, paged.print=FALSE----
+
+plot(sort(scoreHG$HG, decreasing = TRUE), pch = 16,
+     xlab = "Ranked prey-prey interactions",
+     ylab = "HGscore")
+```
+#Highlight HG score 
+```{r}
+
+
+# Create a new dataframe for ggplot with sorted HG scores
+df_HG <- data.frame(
+  Rank = 1:nrow(scoreHG),
+  HG_Score = sort(scoreHG$HG, decreasing = TRUE, na.last = TRUE)
+)
+
+# Find the rows for InteractorA and add the labels
+data_highlight_HG <- scoreHG %>%
+  filter(InteractorA %in% highlight_ids) %>%
+  mutate(
+    Rank = match(HG, df_HG$HG_Score),  # Find corresponding ranks
+    Label = highlight_labels[InteractorA]  # Add the labels
+  )
+
+# Plot using ggplot
+ggplot_HG <- ggplot(df_HG, aes(x = Rank, y = HG_Score)) +
+  geom_point(shape = 16) +
+  labs(
+    x = "Ranked prey-prey interactions",
+    y = "HG-score",
+    title = "HG Score - InteractorA"  # Adding the title here
+  ) +
+  geom_point(data = data_highlight_HG, aes(x = Rank, y = HG, color = Label), shape = 16) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5)  # Centering the title
+  )
+
+# Display the plot
+print(ggplot_HG)
+
+# Save the plot
+ggsave("Plot_HG-score_highlighted.tiff", plot = ggplot_HG, height = 7, width = 7, units = "in", path = getwd())
+
+```
+
