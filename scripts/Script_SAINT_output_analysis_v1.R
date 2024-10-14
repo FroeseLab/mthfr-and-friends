@@ -106,7 +106,7 @@ data_SAINT_merged_modified <- data_SAINT_merged_modified %>%
 
 
 #Kinase activators
-#raw data obtained (date: 5 June 2024) from https://amigo.geneontology.org/amigo/term/GO:0019207
+#raw data obtained (date: 3 June 2024) from https://amigo.geneontology.org/amigo/term/GO:0019207
 data_kinases_activator <- read.csv(file = "data/raw/AmiGO_kinase_activator.csv",
                                    header = FALSE,
                                    check.names = FALSE)
