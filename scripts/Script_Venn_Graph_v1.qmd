@@ -5,7 +5,7 @@ format: html
 editor: visual
 ---
 
-# My upseting plots
+# UpSet plots
 
 ```{r}
 library(UpSetR)
@@ -25,6 +25,14 @@ getwd()
 #Import raw csv file. Manually converted from output Scaffold .txt file prior. 
 data_raw_SAINT_input<- read.csv("../data/interim/SAINT_list_input.csv",  header = TRUE, check.names = FALSE) #it is just the E1 SYPRO 5x from the original raw data from 220420
 
+#Re-name 
+data_raw_SAINT_input <- data_raw_SAINT_input %>%
+  mutate(`#BaitName_Condition` = case_when(
+    `#BaitName_Condition` == "MTHFR_38to656" ~ "MTHFR_38-656",
+     `#BaitName_Condition` == "MTHFR" ~ "MTHFR_WT",
+    TRUE ~ `#BaitName_Condition`
+  ))
+
 
 
 listInput = data_raw_SAINT_input %>%
@@ -37,27 +45,30 @@ length(listInput)
 
 ```{r}
 #| fig-width: 13
-#| fig-height: 12
+#| fig-height: 8
 upset_plot_SAINT_input <- upset(
   fromList(listInput),
   order.by = "freq",
-  text.scale = c(2, 2, 2, 1.5, 2, 1.5)*2 ,
-  point.size = 10,
-  line.size = 5,
+  text.scale = c(1.5, 2, 1.5, 1.5, 1.5, 1.5)*2 ,
+ #Parameters order: c(intersection size title, intersection size tick labels, set size title, set size tick labels, set names, numbers above bars)
+  point.size = 8,
+  line.size = 3,
   sets.x.label = "Set Size",
   # Adjust this to change the size of the dots in the matrix
-  sets.bar.color = "gray",
+  sets.bar.color = "darkgray",
   # Customize as needed
   main.bar.color = "darkgray",
   # Customize as needed
   matrix.color = "black"
 ) # Customize as needed)
 upset_plot_SAINT_input
+
+
 ```
 
 ```{r Save the plot}
 # Open a PNG device
-png(filename = "../data/output/upset_plot_SAINT_input.png",   height = 12,
+png(filename = "../data/output/upset_plot_SAINT_input.png",   height = 8,
     width = 13,
     units = "in", res=300)
 upset_plot_SAINT_input
@@ -70,6 +81,15 @@ dev.off()
 ```{r}
 #Prepare SAINT Input data ------------------------------------------------------------
 data_raw_SAINT_output<- read.table("../data/raw/21262.output.tsv",  header = TRUE, check.names = FALSE) 
+
+#Re-name 
+data_raw_SAINT_output <- data_raw_SAINT_output %>%
+  mutate(`Bait` = case_when(
+    `Bait` == "MTHFR_38to656" ~ "MTHFR_38-656",
+     `Bait` == "MTHFR" ~ "MTHFR_WT",
+    TRUE ~ `Bait`
+  ))
+
 
 listInput_output = data_raw_SAINT_output %>%
   split(.$`Bait`) %>%
@@ -84,14 +104,15 @@ listInput_output <- listInput_output[!names(listInput_output) %in% "Bait"]
 
 ```{r}
 #| fig-width: 13
-#| fig-height: 12
+#| fig-height: 8
 #Generate Diagaram of raw data 
 upset_plot_SAINT_output <- upset(
   fromList(listInput_output),
     order.by = "freq",
-  text.scale = c(2, 2, 2, 1.5, 2, 1.5)*2 ,
-  point.size = 10,
-  line.size = 5,
+  text.scale = c(1.5, 2, 1.5, 1.5, 1.5, 1.5)*2 ,
+ #Parameters order: c(intersection size title, intersection size tick labels, set size title, set size tick labels, set names, numbers above bars)
+  point.size = 8,
+  line.size = 3,
   sets.x.label = "Set Size",
   # Adjust this to change the size of the dots in the matrix
   sets.bar.color = "gray",
@@ -108,7 +129,7 @@ upset_plot_SAINT_output
 
 
 # Open a PNG device
-png(filename = "../data/output/upset_SAINT_output.png", height = 12,
+png(filename = "../data/output/upset_SAINT_output.png", height = 8,
     width = 13,
     units = "in", res=300)
 upset_plot_SAINT_output
@@ -132,10 +153,19 @@ data_baitPrey<-read.table("../data/raw/21262_baitPrey_data.tab.tsv",  header = T
 #Note preys that are found in raw data but not found in bait-prey data will not be merged. E.g. A0A075B6S2
 data_SAINT_merged<-  merge(data_raw_SAINT,data_baitPrey)
 
+#Re-name 
+data_SAINT_merged <- data_SAINT_merged %>%
+  mutate(`Bait` = case_when(
+    `Bait` == "MTHFR_38to656" ~ "MTHFR_38-656",
+         `Bait` == "MTHFR" ~ "MTHFR_WT",
+    TRUE ~ `Bait`
+  ))
+
+
 #Filter SAINT output data based onf F
 
 listInput_output = data_SAINT_merged %>%
-  filter(SP>0.50) %>%
+  filter(SP>0.95 & FCA > 2 ) %>%
   split(.$`Bait`) %>%
   lapply(function(x) x$Prey)
 
@@ -156,14 +186,15 @@ listInput_output = data_SAINT_merged %>%
 
 ```{r}
 #| fig-width: 13
-#| fig-height: 12
+#| fig-height: 8
 
 upset_plot_SAINT_output <- upset(
 fromList(listInput_output),
 order.by = "freq",
-text.scale = c(2, 2, 2, 1.5, 2, 1.5) * 2 ,
-point.size = 10,
-line.size = 5,
+  text.scale = c(1.5, 2, 1.5, 1.5, 1.5, 1.5)*2 ,
+ #Parameters order: c(intersection size title, intersection size tick labels, set size title, set size tick labels, set names, numbers above bars)
+  point.size = 8,
+line.size = 3,
 sets.x.label = "Set Size",
 # Adjust this to change the size of the dots in the matrix   
 sets.bar.color = "gray",   # Customize as needed   
@@ -176,7 +207,7 @@ upset_plot_SAINT_output
 
 ```{r}
 # Open a PNG device
-png(filename = "../data/output/upset_SAINT_output_FDR_0.1.png", height = 12,
+png(filename = "../data/output/upset_SAINT_output_SP_0.95_FCA_2.png", height = 8,
     width = 13,
     units = "in", res=300)
 upset_plot_SAINT_output
@@ -185,52 +216,5 @@ dev.off()
 
 ```
 
-### 
-
-```{r}
-
-#Filter SAINT output data based onf F
-
-listInput_output = data_raw_SAINT_output %>%
-  filter(FDR<=0.1) %>%
-  split(.$`Bait`) %>%
-  lapply(function(x) x$Prey)
-
-# Remove the Bait element from the list
-listInput_output <- listInput_output[!names(listInput_output) %in% "Bait"]
-
-```
-
-```{r}
-#| fig-width: 13
-#| fig-height: 12
-#Generate Diagaram of raw data 
-upset_plot_SAINT_output <- upset(
-  fromList(listInput_output),
-   order.by = "freq",
-  text.scale = c(2, 2, 2, 1.5, 2, 1.5)*2 ,
-  point.size = 10,
-  line.size = 5,
-  sets.x.label = "Set Size",
-  # Adjust this to change the size of the dots in the matrix
-  sets.bar.color = "gray",
-  # Customize as needed
-  main.bar.color = "darkgray",
-  # Customize as needed
-  matrix.color = "black"
-) # Customize as needed)
-upset_plot_SAINT_output
-
-
-```
-
-```{r}
-
-# Open a PNG device
-png(filename = "../data/output/upset_SAINT_output_FDR_0.1.png", height = 12,
-    width = 13,
-    units = "in", res=300)
-upset_plot_SAINT_output
-# Close the device
-dev.off()
+```{}
 ```

@@ -1,0 +1,5 @@
+To update scripts form github - go into my local branch. Then in Terminal, whrite following: 
+
+
+
+C:\Users\Linnea\Documents\Programs\Git\mthfr-and-friends>git pull origin main
