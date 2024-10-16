@@ -2,7 +2,7 @@ library(httr)
 library(readr)
 
 
-endpoint <- "http://sparql.uniprot.org/sparql"
+endpoint <- "https://sparql.uniprot.org/"
 
 query <- "PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
 PREFIX up: <http://purl.uniprot.org/core/>
@@ -27,7 +27,6 @@ WHERE
 
 # query the endpoint using a httr get request with the query = query
 response <- httr::GET(url = endpoint, query = list(query = query, format = "csv"))
-
 # parse the response content into a dataframe
 data <- httr::content(response, "parsed")
 
