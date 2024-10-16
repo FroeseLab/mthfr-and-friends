@@ -4,33 +4,6 @@ library(tidyr)
 library(ggplot2)
 library(qvalue)
 library(stringr)
-suppressPackageStartupMessages({
-    library(UniProt.ws)
-})
-
-
-# Helpers
-translate_up <- function(query_ids){
-    # translate uniprot to gene names
-    out = mapUniProt(
-        from = "UniProtKB_AC-ID",
-        to = "Gene_Name",
-
-        query=as.vector(query_ids)
-    )
-
-    genes = out[['To']]
-    names(genes) = out[['From']]
-
-    return(genes[query_ids])
-
-}
-
-add_genes <- function(qlf){
-    # Add gene names to the table
-    qlf$table$gene = translate_up(row.names(qlf$table))
-    return(qlf)
-}
 
 
 # Load the data
