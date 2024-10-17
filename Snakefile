@@ -48,7 +48,7 @@ rule run_saint:
         """
 
 
-rule run_saint_38656:
+rule run_saint_mthfr38656:
     message:
         """
         Data from SAINT analysis using "data/interim/SAINT_list_input_MTHFR38to656_control.csv" as input, where empty vector is control
