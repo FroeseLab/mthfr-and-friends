@@ -1,28 +1,11 @@
+---
 name: mthfr-and-friends
 channels:
-  - bioconda
-  - conda-forge
-  - nodefaults
+    - bioconda
+    - conda-forge
+    - nodefaults
 dependencies:
-  - r-base
-  - r-renv
-  - snakemake
-  - pre-commit
-  - jupytext
-  - r-dplyr
-  - rstudio
-  - r-readr
-  - r-stringr
-  - r-datacombine
-  - bioconda::bioconductor-uniprot.ws
-  - r-uniprotr
-  - bioconda::bioconductor-stringdb
-  - r-tidyverse
-  - r-strutiny
-  - r-ggpubr
-  - r-inflection
-  - r-data.table
-  - r-cowplot
-  - bioconda::bioconductor-trackviewer
-  - r-ggupset
-  - r-upsetr
+    - r-base
+    - r-renv
+    - snakemake
+    - pre-commit

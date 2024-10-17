@@ -17,11 +17,6 @@ repos:
             exclude: \.Rd # sometimes roxygen fails to generate EOF blank line.
           - id: file-contents-sorter
             files: ^\.Rbuildignore$
-    - repo: git@github.com:pre-commit/mirrors-mypy
-      rev: v1.7.1  # Use the sha / tag you want to point at
-      hooks:
-          - id: mypy
-            args: [--python-version=3.11, --ignore-missing-imports]
     - repo: git@github.com:jumanjihouse/pre-commit-hook-yamlfmt
       rev: 0.2.3 # or other specific tag
       hooks:
@@ -34,7 +29,6 @@ repos:
           - id: parsable-R
           - id: no-browser-statement
           - id: no-debug-statement
-          - id: lintr
     - repo: https://github.com/pre-commit/pre-commit-hooks
       rev: v1.2.3
       hooks:
