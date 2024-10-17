@@ -122,7 +122,7 @@ rule merge_saint_outputs:
         "scripts/merge_saint_outputs.R"
 
 
-rule plot_saint_outputs:
+rule annotate_saint_outputs:
     conda:
         "../environment.yml"
     input:
@@ -132,14 +132,25 @@ rule plot_saint_outputs:
         amigo_kinase_activator="data/interim/AmiGO_kinaseactivator_GO-0019207.csv",
         string_db="data/interim/string_db",
     output:
-        plot_sp_fca="results/plot_SP_FCA_modified_{condition}.png",
-        plot_sp_fca_check="results/plot_SP_FCA_check_{condition}.png",
+        merged_saint_output="data/output/saint_output_merged_annotated_{condition}.csv",
+        merged_saint_output_rds="data/output/saint_output_merged_annotated_{condition}.rds",
+        plot_sp_fca="results/plot_SP_FCA_raw_{condition}.png",
+    script:
+        "scripts/annotate_saint_outputs.R"
+
+
+rule plot_saint_outputs:
+    conda:
+        "../environment.yml"
+    input:
+        saint_annotated="data/output/saint_output_merged_annotated_{condition}.csv",
+    output:
+        plot_sp_fca="results/plot_SP_FCA_main_{condition}.png",
         plot_sp_fca_kinase="results/plot_SP_FCA_kinase_{condition}.png",
         plot_sp_fca_string="results/plot_SP_FCA_string_{condition}.png",
         plot_sp_fca_crapome_gradient="results/plot_SP_FCA_crapome_gradient_{condition}.png",
         plot_sp_fca_crapome="results/plot_SP_FCA_crapome_{condition}.png",
         plot_heatmap="results/plot_heatmap_{condition}.png",
-        merged_saint_output="data/output/saint_output_merged_annotated_{condition}.csv",
     script:
         "scripts/Script_SAINT_output_analysis_v1.R"
 
