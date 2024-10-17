@@ -1,11 +1,14 @@
 rule all:
     input:
-        "data/output/saint_output_merged_main.csv",
+        expand(
+            "data/output/saint_output_merged_{condition}.csv",
+            condition=["main", "MTHFR38to656"],
+        ),
 
 
 rule prepare_saint:
     conda:
-        "environment.yml"
+        "../environment.yml"
     input:
         data_raw_scaffold="data/raw/Prepare_SAINT_list_input_file/Proteins Report of merged human files with all 4 conditions (1. Feb, 5. Feb, 18. Feb).txt",
         data_rename="data/metadata/SAINT_rename_file.csv",
@@ -33,11 +36,11 @@ rule run_saint:
         """
     input:
         data_saint="data/interim/SAINT_list_input.csv",
-        saint_output="data/resources/prepared/21262.output.tsv",
-        bait_prey_output="data/resources/prepared/21262_baitPrey_data.tab.tsv",
+        saint_output="resources/precomputed/21262.output.tsv",
+        bait_prey_output="resources/precomputed/21262_baitPrey_data.tab.tsv",
     output:
         saint_output="data/interim/saint_output_main.csv",
-        bait_prey_output="data/interim/saint_baitPrey_main.tab.tsv",
+        bait_prey_output="data/interim/saint_baitprey_main.tab.tsv",
     shell:
         """
         cp {input.saint_output} {output.saint_output}
@@ -60,11 +63,11 @@ rule run_saint_38656:
         """
     input:
         data_saint="data/interim/SAINT_list_input_MTHFR38to656_control.csv",
-        saint_output="data/resources/prepared/21302.output.tsv",
-        bait_prey_output="data/resources/prepared/21302_baitPrey_data.tab.tsv",
+        saint_output="resources/precomputed/21302.output.tsv",
+        bait_prey_output="resources/precomputed/21302_baitPrey_data.tab.tsv",
     output:
         saint_output="data/interim/saint_output_MTHFR38to656.csv",
-        bait_prey_output="data/interim/saint_baitPrey_MTHFR38to656.tab.tsv",
+        bait_prey_output="data/interim/saint_baitprey_MTHFR38to656.tab.tsv",
     shell:
         """
         cp {input.saint_output} {output.saint_output}
@@ -72,34 +75,79 @@ rule run_saint_38656:
         """
 
 
+rule query_crapome:
+    message:
+        """
+        Generated from entering the Prey accession IDs in file "data/interim/crapome_input.csv" 
+        Insert into "Workflow 1: Query proteins and retrieve profiles"at https://reprint-apms.org/?q=chooseworkflow
+        Date obtained 31st of May 2024
+        """
+    input:
+        crapome_input="data/interim/crapome_input.csv",
+        crapome_output="resources/precomputed/Crapome_1716919084_gp.csv",
+    output:
+        crapome_output="data/interim/crapome_output.csv",
+    shell:
+        """
+        cp {input.crapome_output} {output.crapome_output}
+        """
+
+
+rule query_amigo:
+    message:
+        """
+        raw data obtained (date: 26 July 2024)
+        from https://amigo.geneontology.org/amigo/term/GO:0004672
+        with "Gene/product (bioentity_label)
+        """
+    input:
+        amigo="resources/precomputed/AmiGO_{label}_{go}.csv",
+    output:
+        amigo="data/interim/AmiGO_{label}_{go}.csv",
+    shell:
+        """
+        cp {input.amigo} {output.amigo}
+        """
+
+
 rule merge_saint_outputs:
+    conda:
+        "../environment.yml"
     input:
         saint_output="data/interim/saint_output_{condition}.csv",
-        saint_prey_output="data/interim/saint_output_{condition}.csv",
+        saint_prey_output="data/interim/saint_baitprey_{condition}.tab.tsv",
     output:
         saint_output="data/output/saint_output_merged_{condition}.csv",
     script:
         "scripts/merge_saint_outputs.R"
 
 
-# Use renv
-wildcard_constraints:
-    # Allows renv_dir also to be the empty (=root dir)
-    renv_dir=".*",
-
-
-rule restore_renv:
+rule plot_saint_outputs:
     conda:
-        "environment.yml"
+        "../environment.yml"
     input:
-        rprofile="{renv_dir}.Rprofile",
-        lock="{renv_dir}renv.lock",
+        saint_merged="data/output/saint_output_merged_{condition}.csv",
+        crapome="data/interim/crapome_output.csv",
+        amigo_kinase="data/interim/AmiGO_kinase_GO-0004672.csv",
+        amigo_kinase_activator="data/interim/AmiGO_kinaseactivator_GO-0019207.csv",
+        string_db="data/interim/string_db",
     output:
-        restored="{renv_dir}restored.Rprofile",
-    log:
-        "logs/renv/{renv_dir}_restore.log",
-    shell:
-        """
-        R -e 'source("{input.rprofile}", chdir=TRUE);renv::restore()'
-        echo 'source("{input.rprofile}", chdir=TRUE)' > {output.restored}
-        """
+        plot_sp_fca="results/plot_SP_FCA_modified_{condition}.png",
+        plot_sp_fca_check="results/plot_SP_FCA_check_{condition}.png",
+        plot_sp_fca_kinase="results/plot_SP_FCA_kinase_{condition}.png",
+        plot_sp_fca_string="results/plot_SP_FCA_string_{condition}.png",
+        plot_sp_fca_crapome_gradient="results/plot_SP_FCA_crapome_gradient_{condition}.png",
+        plot_sp_fca_crapome="results/plot_SP_FCA_crapome_{condition}.png",
+        plot_heatmap="results/plot_heatmap_{condition}.png",
+        merged_saint_output="data/output/saint_output_merged_annotated_{condition}.csv",
+    script:
+        "scripts/Script_SAINT_output_analysis_v1.R"
+
+
+rule string_db_cache:
+    conda:
+        "../environment.yml"
+    output:
+        string_db=directory("data/interim/string_db"),
+    script:
+        "scripts/string_db_cache.R"
