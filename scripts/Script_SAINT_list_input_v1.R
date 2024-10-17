@@ -1,17 +1,30 @@
-library(dplyr)
-#library(DataCombine)
-library(UniProt.ws)
-
 #Read the input file ----
-getwd() #Detects file location
-# Set directory 
-#setwd(getwd()) #sets file location as directory 
+
+if (exists('snakemake')){
+  # input
+  fn_raw_scaffold <- snakemake@input$data_raw_scaffold
+  fn_data_rename <- snakemake@input$data_rename
+
+  # output
+  fn_saint <- snakemake@output$data_saint
+  fn_saint_MTHFR38to65 <- snakemake@output$data_saint_MTHFR38to65
+  fn_crapome <- snakemake@output$crapome
+} else {
+  fn_raw_scaffold <- "data/raw/Prepare_SAINT_list_input_file/Proteins Report of merged human files with all 4 conditions (1. Feb, 5. Feb, 18. Feb).txt"
+  fn_data_rename <- "data/metadata/SAINT_rename_file.csv"
+
+  fn_saint <- "data/interim/SAINT_list_input.csv"
+  fn_saint_MTHFR38to65 <- "data/interim/SAINT_list_input_MTHFR38to656_control.csv"
+  fn_crapome <- "data/interim/crapome_input.csv"
+}
+
+library(dplyr)
 
 #Import raw csv file. Manually converted from output Scaffold .txt file prior. 
-data_raw_scaffold<- read.csv("data/raw/Prepare_SAINT_list_input_file/Proteins Report of merged human files with all 4 conditions (1. Feb, 5. Feb, 18. Feb).txt",
+data_raw_scaffold<- read.csv(fn_raw_scaffold,
    skip = 1, header = TRUE, check.names = FALSE, sep='\t') #it is just the E1 SYPRO 5x from the original raw data from 220420
 #Import csv file for renaming of Bait and AP-names 
-data_rename<- read.csv("data/metadata/SAINT_rename_file.csv", header = TRUE, check.names = FALSE) #it is just the E1 SYPRO 5x from the original raw data from 220420
+data_rename<- read.csv(fn_data_rename, header = TRUE, check.names = FALSE) #it is just the E1 SYPRO 5x from the original raw data from 220420
 
 #Modify file ----
 
@@ -50,7 +63,7 @@ data_SAINT_input <- data_SAINT_input %>%
 
 ## Save data ----
 # Save the cleaned data to a new CSV file
-write.csv(data_SAINT_input, "data/interim/SAINT_list_input.csv", row.names = FALSE, quote = FALSE)
+write.csv(data_SAINT_input, fn_saint, row.names = FALSE, quote = FALSE)
 
 #SAINT input file with MTHFR38to656 as control ----
 # Modified input file where Empty vector is removed as a control
@@ -62,7 +75,7 @@ data_SAINT_input_control$`#BaitName_Condition` <- replace(data_SAINT_input_contr
                                                           data_SAINT_input_control$`#BaitName_Condition` == "MTHFR_38to656", "CONTROL")
 ## Save data ----
 # Save the cleaned data to a new CSV file
-write.csv(data_SAINT_input_control, "data/interim/SAINT_list_input_MTHFR38to656_control.csv", row.names = FALSE, quote = FALSE)
+write.csv(data_SAINT_input_control, fn_saint_MTHFR38to65, row.names = FALSE, quote = FALSE)
 
 
 #Crapome list ----
@@ -72,4 +85,4 @@ data_crapome<-unique(data_SAINT_input$`#PreyName`)
 
 ## Save data ----
 # Save the cleaned data to a new CSV file
-write.table(data_crapome, file="data/interim/crapome_input.csv", row.names = FALSE, col.names =FALSE, quote = FALSE)
+write.table(data_crapome, file=fn_crapome, row.names = FALSE, col.names =FALSE, quote = FALSE)

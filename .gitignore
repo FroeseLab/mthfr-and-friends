@@ -50,3 +50,6 @@ rsconnect/
 
 # ignore data
 data/
+
+# Snakemake
+.snakemake
