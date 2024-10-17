@@ -9,9 +9,6 @@ if (exists("snakemake")) {
   fn_saint <- snakemake@output$data_saint
   fn_saint_mthfr38to65 <- snakemake@output$data_saint_MTHFR38to65
   fn_crapome <- snakemake@output$crapome
-
-  # renv
-  source(snakemake@input$renv)
 } else {
   fn_raw_scaffold <- "data/raw/Prepare_SAINT_list_input_file/Proteins Report of merged human files with all 4 conditions (1. Feb, 5. Feb, 18. Feb).txt"
   fn_data_rename <- "data/metadata/SAINT_rename_file.csv"

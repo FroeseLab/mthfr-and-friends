@@ -34,4 +34,4 @@ data_baitprey <- read.table(
 data_saint_merged <- merge(data_raw_saint, data_baitprey, all.x = TRUE)
 
 # Save Merged saint data
-write.csv(data_saint_merged, "data/output/saint_analysis_merged.csv")
+write.csv(data_saint_merged, fn_saint_merged)

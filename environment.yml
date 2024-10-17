@@ -1,13 +1,12 @@
 ---
 name: mthfr-and-friends
 channels:
-    - bioconda
     - conda-forge
+    - bioconda
     - r
-    - defaults
+    - nodefaults
 dependencies:
     - r-base
-    - r-renv
     - snakemake
     - pre-commit
     - r-uniprotr
