@@ -53,3 +53,4 @@ data/
 
 # Snakemake
 .snakemake
+report.html
