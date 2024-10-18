@@ -1,5 +1,5 @@
 containerized: "docker://votti/mthfr-and-friends:v0.1.0"
-
+import shutil
 
 rule all:
     input:
@@ -55,11 +55,9 @@ rule run_saint:
     output:
         saint_output="results/interim/saint_output_{condition}.csv",
         bait_prey_output="results/interim/saint_baitprey_{condition}.tab.tsv",
-    shell:
-        """
-        cp {input.saint_output} {output.saint_output}
-        cp {input.bait_prey_output} {output.bait_prey_output}
-        """
+    run:
+        shutil.copy(input.saint_output, output.saint_output)
+        shutil.copy(input.bait_prey_output, output.bait_prey_output)
 
 
 rule query_crapome:
@@ -74,10 +72,8 @@ rule query_crapome:
         crapome_output="resources/precomputed/Crapome_1716919084_gp.csv",
     output:
         crapome_output="results/interim/crapome_output.csv",
-    shell:
-        """
-        cp {input.crapome_output} {output.crapome_output}
-        """
+    run:
+        shutil.copy(input.crapome_output, output.crapome_output)
 
 
 rule query_amigo:
@@ -91,10 +87,8 @@ rule query_amigo:
         amigo="resources/precomputed/AmiGO_{label}_{go}.csv",
     output:
         amigo="results/interim/AmiGO_{label}_{go}.csv",
-    shell:
-        """
-        cp {input.amigo} {output.amigo}
-        """
+    run:
+        shutil.copy(input.amigo, output.amigo)
 
 
 rule merge_saint_outputs:
