@@ -22,7 +22,7 @@ rule prepare_saint:
         data_saint_MTHFR38to65="interim/SAINT_list_input_MTHFR38to656_control.csv",
         crapome="data/interim/crapome_input.csv",
     script:
-        "scripts/Script_SAINT_list_input_v1.R"
+        "scripts/prepare_saint_input.R"
 
 
 rule run_saint:
@@ -156,7 +156,21 @@ rule plot_saint_outputs:
         plot_sp_fca_crapome="results/plot_SP_FCA_crapome_{condition}.png",
         plot_heatmap="results/plot_heatmap_{condition}.png",
     script:
-        "scripts/Script_SAINT_output_analysis_v1.R"
+        "scripts/plot_saint_outputs.R"
+
+
+rule plot_venn:
+    conda:
+        "../environment.yml"
+    input:
+        saint_input="data/interim/SAINT_list_input.csv",
+        saint_annotated="data/output/saint_output_merged_annotated_main.rds",
+    output:
+        upsetr_input="results/upset_plot_SAINT_input.png",
+        upsetr_output="results/upset_plot_SAINT_output.png",
+        upsetr_filtered="results/upset_SAINT_output_SP_0.95_FCA_2.png",
+    script:
+        "scripts/plot_venn_graph.R"
 
 
 rule string_db_cache:
