@@ -28,7 +28,6 @@ library(dplyr)
 library(readr)
 library(stringr)
 library(UniProt.ws)
-library(UniprotR)
 library(STRINGdb)
 library(tidyverse)
 
@@ -246,8 +245,15 @@ data_SAINT_merged_modified$Bait_name <- factor(
 
 # Retrieve protein names----
 # Generate dataframe and retrieve protein names from Uniprot
-data_protein_name <- data.frame(Prey = unique(data_SAINT_merged$Prey))
-data_protein_name$protein_name <- GetProteinAnnontate(unique(data_SAINT_merged$Prey), c("protein_name"))
+data_protein_name <- mapUniProt(
+  from = "UniProtKB_AC-ID",
+  to = "UniProtKB",
+  columns = c("accession", "id", "protein_name"),
+  query = unique(data_SAINT_merged$Prey)
+) %>%
+  mutate(Prey = Entry) %>%
+  dplyr::select(Prey, Protein.names)
+
 # merge data
 data_SAINT_merged_modified <- merge(data_SAINT_merged_modified,
   data_protein_name,
