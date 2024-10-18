@@ -11,8 +11,6 @@ dependencies:
     - r-base
     - r-precommit
     - bioconda::bioconductor-stringdb
-    - bioconda::bioconductor-uniprot.ws
-    - bioconda::bioconductor-trackviewer
     - r-tidyverse
     - r-ggpubr
     - r-data.table

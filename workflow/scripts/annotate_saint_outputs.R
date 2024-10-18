@@ -27,7 +27,7 @@ library(ggrepel)
 library(dplyr)
 library(readr)
 library(stringr)
-library(UniProt.ws)
+#library(UniProt.ws)
 library(STRINGdb)
 library(tidyverse)
 
@@ -242,7 +242,7 @@ data_SAINT_merged_modified$Bait_name <- factor(
   levels = c("MTHFR[WT]", "MTHFR[T34A]", "MTHFR[38-656]")
 )
 
-
+if (FALSE){
 # Retrieve protein names----
 # Generate dataframe and retrieve protein names from Uniprot
 data_protein_name <- mapUniProt(
@@ -259,7 +259,7 @@ data_SAINT_merged_modified <- merge(data_SAINT_merged_modified,
   data_protein_name,
   on = "Prey", all.x = TRUE
 )
-
+}
 
 # Save data file ----
 # Save Merged SAINT data
