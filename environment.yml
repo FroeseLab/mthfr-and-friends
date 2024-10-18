@@ -1,16 +1,19 @@
+---
 name: mthfr-and-friends
 channels:
-  - bioconda
-  - conda-forge
-  - defaults
+    - conda-forge
+    - bioconda
+    - r
+    - nodefaults
 dependencies:
-  - r-base
-  - r-renv
-  - snakemake
-  - pre-commit
-  - jupytext
-  - gmp
-  - igraph
-  - ca-certificates
-  - certifi
-  - openssl
+    - snakemake
+    - pre-commit
+    - r-base
+    - r-precommit
+    - bioconda::bioconductor-stringdb
+    - r-tidyverse
+    - r-ggpubr
+    - r-data.table
+    - r-cowplot
+    - r-ggupset
+    - r-upsetr

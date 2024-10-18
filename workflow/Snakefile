@@ -1,0 +1,177 @@
+containerized: "docker://votti/mthfr-and-friends:v0.1.0"
+import shutil
+
+rule all:
+    input:
+        expand(
+            "results/output/saint_output_merged_{condition}.csv",
+            condition=["main", "MTHFR38to656"],
+        ),
+        expand(
+            "results/plot_SP_FCA_main_{condition}.png",
+            condition=["main", "MTHFR38to656"],
+        ),
+        "results/upset_plot_SAINT_input.png",
+        "results/upset_SAINT_output_SP_0.95_FCA_2.png",
+
+
+rule prepare_saint:
+    conda:
+        "../environment.yml"
+    input:
+        data_raw_scaffold="resources/raw/Proteins Report of merged human files with all 4 conditions (1. Feb, 5. Feb, 18. Feb).txt",
+        data_rename="resources/SAINT_rename_file.csv",
+    output:
+        data_saint="results/interim/SAINT_list_input_main.csv",
+        data_saint_MTHFR38to65="results/interim/SAINT_list_input_MTHFR38to656.csv",
+        crapome="results/interim/crapome_input.csv",
+    script:
+        "scripts/prepare_saint_input.R"
+
+
+rule run_saint:
+    message:
+        """
+        Data from SAINT analysis using "results/interim/SAINT_list_input_{wildcards.condition}.csv" as input, where empty vector is control
+        SAINT analysis performed with https://reprint-apms.org/?q=analysis_front_apms online server 
+        Import raw .tsv file of the "raw SAINT results".
+        When downloaded a .output file is given.
+        Just add .tsv file format
+
+        Bait-prey output was exported from the unfiltered matrix
+        from "Bait-prey heatmap" tab. Downloaded as a .tab file.
+        Just add .tsv file format
+        """
+    input:
+        data_saint="results/interim/SAINT_list_input_{condition}.csv",
+        saint_output=lambda wildcards: {
+            "main": "resources/precomputed/21262.output.tsv",
+            "MTHFR38to656": "resources/precomputed/21302.output.tsv",
+        }[wildcards.condition],
+        bait_prey_output=lambda wildcards: {
+            "main": "resources/precomputed/21262_baitPrey_data.tab.tsv",
+            "MTHFR38to656": "resources/precomputed/21302_baitPrey_data.tab.tsv",
+        }[wildcards.condition],
+    output:
+        saint_output="results/interim/saint_output_{condition}.csv",
+        bait_prey_output="results/interim/saint_baitprey_{condition}.tab.tsv",
+    run:
+        shutil.copy(input.saint_output, output.saint_output)
+        shutil.copy(input.bait_prey_output, output.bait_prey_output)
+
+
+rule query_crapome:
+    message:
+        """
+        Generated from entering the Prey accession IDs in file "results/interim/crapome_input.csv" 
+        Insert into "Workflow 1: Query proteins and retrieve profiles"at https://reprint-apms.org/?q=chooseworkflow
+        Date obtained 31st of May 2024
+        """
+    input:
+        crapome_input="results/interim/crapome_input.csv",
+        crapome_output="resources/precomputed/Crapome_1716919084_gp.csv",
+    output:
+        crapome_output="results/interim/crapome_output.csv",
+    run:
+        shutil.copy(input.crapome_output, output.crapome_output)
+
+
+rule query_amigo:
+    message:
+        """
+        raw data obtained (date: 26 July 2024)
+        from https://amigo.geneontology.org/amigo/term/GO:0004672
+        with "Gene/product (bioentity_label)
+        """
+    input:
+        amigo="resources/precomputed/AmiGO_{label}_{go}.csv",
+    output:
+        amigo="results/interim/AmiGO_{label}_{go}.csv",
+    run:
+        shutil.copy(input.amigo, output.amigo)
+
+
+rule merge_saint_outputs:
+    conda:
+        "../environment.yml"
+    input:
+        saint_output="results/interim/saint_output_{condition}.csv",
+        saint_prey_output="results/interim/saint_baitprey_{condition}.tab.tsv",
+    output:
+        saint_output="results/output/saint_output_merged_{condition}.csv",
+    script:
+        "scripts/merge_saint_outputs.R"
+
+
+rule annotate_saint_outputs:
+    conda:
+        "../environment.yml"
+    input:
+        saint_merged="results/output/saint_output_merged_{condition}.csv",
+        crapome="results/interim/crapome_output.csv",
+        amigo_kinase="results/interim/AmiGO_kinase_GO-0004672.csv",
+        amigo_kinase_activator="results/interim/AmiGO_kinaseactivator_GO-0019207.csv",
+        string_db="results/interim/string_db",
+    output:
+        merged_saint_output="results/output/saint_output_merged_annotated_{condition}.csv",
+        merged_saint_output_rds="results/output/saint_output_merged_annotated_{condition}.rds",
+        plot_sp_fca="results/plot_SP_FCA_raw_{condition}.png",
+    script:
+        "scripts/annotate_saint_outputs.R"
+
+
+rule plot_saint_outputs:
+    conda:
+        "../environment.yml"
+    input:
+        saint_annotated="results/output/saint_output_merged_annotated_{condition}.rds",
+    output:
+        plot_sp_fca="results/plot_SP_FCA_main_{condition}.png",
+        plot_sp_fca_kinase="results/plot_SP_FCA_kinase_{condition}.png",
+        plot_sp_fca_string="results/plot_SP_FCA_string_{condition}.png",
+        plot_sp_fca_crapome_gradient="results/plot_SP_FCA_crapome_gradient_{condition}.png",
+        plot_sp_fca_crapome="results/plot_SP_FCA_crapome_{condition}.png",
+        plot_heatmap="results/plot_heatmap_{condition}.png",
+    script:
+        "scripts/plot_saint_outputs.R"
+
+
+rule plot_venn:
+    conda:
+        "../environment.yml"
+    input:
+        saint_input="results/interim/SAINT_list_input_main.csv",
+        saint_annotated="results/output/saint_output_merged_annotated_main.rds",
+    output:
+        upsetr_input=report(
+            "results/upset_plot_SAINT_input.png",
+            caption="report/fig2c.rst",
+            category="Figures",
+            labels={
+                "figure": "2",
+                "panel": "c",
+                "title": "UpSet Plot of raw proteomics data",
+            },
+        ),
+        upsetr_output="results/upset_plot_SAINT_output.png",
+        upsetr_filtered=report(
+            "results/upset_SAINT_output_SP_0.95_FCA_2.png",
+            caption="report/fig2d.rst",
+            category="Figures",
+            labels={
+                "figure": "2",
+                "panel": "d",
+                "title": "UpSet Plot of SAINT results",
+            },
+        ),
+    script:
+        "scripts/plot_venn_graph.R"
+
+
+rule string_db_cache:
+    conda:
+        "../environment.yml"
+    output:
+        string_db=directory("results/interim/string_db"),
+    script:
+        "scripts/string_db_cache.R"
