@@ -180,7 +180,7 @@ https://conda.anaconda.org/conda-forge/noarch/smart_open-7.0.5-pyhd8ed1ab_1.cond
 https://conda.anaconda.org/bioconda/noarch/snakemake-interface-common-1.17.4-pyhdfd78af_0.tar.bz2#4a72a6f5efb323aa2953e3dde0589ff6
 https://conda.anaconda.org/conda-forge/noarch/typer-slim-0.12.5-pyhd8ed1ab_0.conda#a46aa56c0ca7cc2bd38baffc2686f0a6
 https://conda.anaconda.org/conda-forge/noarch/typing-extensions-4.12.2-hd8ed1ab_0.conda#52d648bd608f5737b123f510bb5514b5
-https://conda.anaconda.org/conda-forge/noarch/virtualenv-20.26.6-pyhd8ed1ab_0.conda#a7aa70aa30c47aeb84672621a85a4ef8
+https://conda.anaconda.org/conda-forge/noarch/virtualenv-20.27.0-pyhd8ed1ab_0.conda#a6ed1227ba6ec37cfc2b25e6512f729f
 https://conda.anaconda.org/conda-forge/noarch/yq-3.4.3-pyhd8ed1ab_0.conda#b5a8334311d5f6751cce8281ab6458d3
 https://conda.anaconda.org/conda-forge/noarch/yte-1.5.4-pyha770c72_0.conda#f4d2f4a372be452baebf8dbdcd9892ed
 https://conda.anaconda.org/conda-forge/noarch/annotated-types-0.7.0-pyhd8ed1ab_0.conda#7e9f4612544c8edbfd6afad17f1bd045

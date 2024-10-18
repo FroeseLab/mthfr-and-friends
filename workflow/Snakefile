@@ -1,3 +1,6 @@
+containerized: "docker://votti/mthfr-and-friends:v0.1.0"
+
+
 rule all:
     input:
         expand(
@@ -20,7 +23,7 @@ rule prepare_saint:
         data_rename="resources/SAINT_rename_file.csv",
     output:
         data_saint="results/interim/SAINT_list_input_main.csv",
-        data_saint_MTHFR38to65="results/interim/SAINT_list_input_MTHFR38to656_control.csv",
+        data_saint_MTHFR38to65="results/interim/SAINT_list_input_MTHFR38to656.csv",
         crapome="results/interim/crapome_input.csv",
     script:
         "scripts/prepare_saint_input.R"
