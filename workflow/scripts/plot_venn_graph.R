@@ -1,6 +1,11 @@
 if (exists("snakemake")) {
   # input
   fn_saint_input <- snakemake@input$saint_input
+  fn_saint_annotated <- snakemake@input$saint_annotated
+  # output
+  fn_upsetr_input <- snakemake@output$upsetr_input
+  fn_upsetr_output <- snakemake@output$upsetr_output
+  fn_upsetr_filtered <- snakemake@output$upsetr_filtered
 } else {
   fn_saint_input <- "data/interim/SAINT_list_input.csv"
   fn_saint_annotated <- "data/output/saint_output_merged_annotated_main.rds"
