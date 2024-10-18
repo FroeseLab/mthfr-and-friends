@@ -1,7 +1,7 @@
 rule all:
     input:
         expand(
-            "data/output/saint_output_merged_{condition}.csv",
+            "results/output/saint_output_merged_{condition}.csv",
             condition=["main", "MTHFR38to656"],
         ),
         expand(
@@ -14,13 +14,12 @@ rule prepare_saint:
     conda:
         "../environment.yml"
     input:
-        data_raw_scaffold="data/raw/Prepare_SAINT_list_input_file/Proteins Report of merged human files with all 4 conditions (1. Feb, 5. Feb, 18. Feb).txt",
-        data_rename="data/metadata/SAINT_rename_file.csv",
-        renv="restored.Rprofile",
+        data_raw_scaffold="resources/raw/Proteins Report of merged human files with all 4 conditions (1. Feb, 5. Feb, 18. Feb).txt",
+        data_rename="resources/SAINT_rename_file.csv",
     output:
-        data_saint="data/interim/SAINT_list_input.csv",
-        data_saint_MTHFR38to65="interim/SAINT_list_input_MTHFR38to656_control.csv",
-        crapome="data/interim/crapome_input.csv",
+        data_saint="results/interim/SAINT_list_input.csv",
+        data_saint_MTHFR38to65="results/interim/SAINT_list_input_MTHFR38to656_control.csv",
+        crapome="results/interim/crapome_input.csv",
     script:
         "scripts/prepare_saint_input.R"
 
@@ -28,7 +27,7 @@ rule prepare_saint:
 rule run_saint:
     message:
         """
-        Data from SAINT analysis using "data/interim/SAINT_list_input.csv" as input, where empty vector is control
+        Data from SAINT analysis using "results/interim/SAINT_list_input.csv" as input, where empty vector is control
         SAINT analysis performed with https://reprint-apms.org/?q=analysis_front_apms online server 
         Import raw .tsv file of the "raw SAINT results".
         When downloaded a .output file is given.
@@ -39,12 +38,12 @@ rule run_saint:
         Just add .tsv file format
         """
     input:
-        data_saint="data/interim/SAINT_list_input.csv",
+        data_saint="results/interim/SAINT_list_input.csv",
         saint_output="resources/precomputed/21262.output.tsv",
         bait_prey_output="resources/precomputed/21262_baitPrey_data.tab.tsv",
     output:
-        saint_output="data/interim/saint_output_main.csv",
-        bait_prey_output="data/interim/saint_baitprey_main.tab.tsv",
+        saint_output="results/interim/saint_output_main.csv",
+        bait_prey_output="results/interim/saint_baitprey_main.tab.tsv",
     shell:
         """
         cp {input.saint_output} {output.saint_output}
@@ -55,7 +54,7 @@ rule run_saint:
 rule run_saint_38656:
     message:
         """
-        Data from SAINT analysis using "data/interim/SAINT_list_input_MTHFR38to656_control.csv" as input, where empty vector is control
+        Data from SAINT analysis using "results/interim/SAINT_list_input_MTHFR38to656_control.csv" as input, where empty vector is control
         SAINT analysis performed with https://reprint-apms.org/?q=analysis_front_apms online server 
         Import raw .tsv file of the "raw SAINT results".
         When downloaded a .output file is given.
@@ -66,12 +65,12 @@ rule run_saint_38656:
         Just add .tsv file format
         """
     input:
-        data_saint="data/interim/SAINT_list_input_MTHFR38to656_control.csv",
+        data_saint="results/interim/SAINT_list_input_MTHFR38to656_control.csv",
         saint_output="resources/precomputed/21302.output.tsv",
         bait_prey_output="resources/precomputed/21302_baitPrey_data.tab.tsv",
     output:
-        saint_output="data/interim/saint_output_MTHFR38to656.csv",
-        bait_prey_output="data/interim/saint_baitprey_MTHFR38to656.tab.tsv",
+        saint_output="results/interim/saint_output_MTHFR38to656.csv",
+        bait_prey_output="results/interim/saint_baitprey_MTHFR38to656.tab.tsv",
     shell:
         """
         cp {input.saint_output} {output.saint_output}
@@ -82,15 +81,15 @@ rule run_saint_38656:
 rule query_crapome:
     message:
         """
-        Generated from entering the Prey accession IDs in file "data/interim/crapome_input.csv" 
+        Generated from entering the Prey accession IDs in file "results/interim/crapome_input.csv" 
         Insert into "Workflow 1: Query proteins and retrieve profiles"at https://reprint-apms.org/?q=chooseworkflow
         Date obtained 31st of May 2024
         """
     input:
-        crapome_input="data/interim/crapome_input.csv",
+        crapome_input="results/interim/crapome_input.csv",
         crapome_output="resources/precomputed/Crapome_1716919084_gp.csv",
     output:
-        crapome_output="data/interim/crapome_output.csv",
+        crapome_output="results/interim/crapome_output.csv",
     shell:
         """
         cp {input.crapome_output} {output.crapome_output}
@@ -107,7 +106,7 @@ rule query_amigo:
     input:
         amigo="resources/precomputed/AmiGO_{label}_{go}.csv",
     output:
-        amigo="data/interim/AmiGO_{label}_{go}.csv",
+        amigo="results/interim/AmiGO_{label}_{go}.csv",
     shell:
         """
         cp {input.amigo} {output.amigo}
@@ -118,10 +117,10 @@ rule merge_saint_outputs:
     conda:
         "../environment.yml"
     input:
-        saint_output="data/interim/saint_output_{condition}.csv",
-        saint_prey_output="data/interim/saint_baitprey_{condition}.tab.tsv",
+        saint_output="results/interim/saint_output_{condition}.csv",
+        saint_prey_output="results/interim/saint_baitprey_{condition}.tab.tsv",
     output:
-        saint_output="data/output/saint_output_merged_{condition}.csv",
+        saint_output="results/output/saint_output_merged_{condition}.csv",
     script:
         "scripts/merge_saint_outputs.R"
 
@@ -130,14 +129,14 @@ rule annotate_saint_outputs:
     conda:
         "../environment.yml"
     input:
-        saint_merged="data/output/saint_output_merged_{condition}.csv",
-        crapome="data/interim/crapome_output.csv",
-        amigo_kinase="data/interim/AmiGO_kinase_GO-0004672.csv",
-        amigo_kinase_activator="data/interim/AmiGO_kinaseactivator_GO-0019207.csv",
-        string_db="data/interim/string_db",
+        saint_merged="results/output/saint_output_merged_{condition}.csv",
+        crapome="results/interim/crapome_output.csv",
+        amigo_kinase="results/interim/AmiGO_kinase_GO-0004672.csv",
+        amigo_kinase_activator="results/interim/AmiGO_kinaseactivator_GO-0019207.csv",
+        string_db="results/interim/string_db",
     output:
-        merged_saint_output="data/output/saint_output_merged_annotated_{condition}.csv",
-        merged_saint_output_rds="data/output/saint_output_merged_annotated_{condition}.rds",
+        merged_saint_output="results/output/saint_output_merged_annotated_{condition}.csv",
+        merged_saint_output_rds="results/output/saint_output_merged_annotated_{condition}.rds",
         plot_sp_fca="results/plot_SP_FCA_raw_{condition}.png",
     script:
         "scripts/annotate_saint_outputs.R"
@@ -147,7 +146,7 @@ rule plot_saint_outputs:
     conda:
         "../environment.yml"
     input:
-        saint_annotated="data/output/saint_output_merged_annotated_{condition}.rds",
+        saint_annotated="results/output/saint_output_merged_annotated_{condition}.rds",
     output:
         plot_sp_fca="results/plot_SP_FCA_main_{condition}.png",
         plot_sp_fca_kinase="results/plot_SP_FCA_kinase_{condition}.png",
@@ -163,8 +162,8 @@ rule plot_venn:
     conda:
         "../environment.yml"
     input:
-        saint_input="data/interim/SAINT_list_input.csv",
-        saint_annotated="data/output/saint_output_merged_annotated_main.rds",
+        saint_input="results/interim/SAINT_list_input.csv",
+        saint_annotated="results/output/saint_output_merged_annotated_main.rds",
     output:
         upsetr_input="results/upset_plot_SAINT_input.png",
         upsetr_output="results/upset_plot_SAINT_output.png",
@@ -177,6 +176,6 @@ rule string_db_cache:
     conda:
         "../environment.yml"
     output:
-        string_db=directory("data/interim/string_db"),
+        string_db=directory("results/interim/string_db"),
     script:
         "scripts/string_db_cache.R"
