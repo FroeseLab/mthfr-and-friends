@@ -4,6 +4,10 @@ rule all:
             "data/output/saint_output_merged_{condition}.csv",
             condition=["main", "MTHFR38to656"],
         ),
+        expand(
+            "results/plot_SP_FCA_main_{condition}.png",
+            condition=["main", "MTHFR38to656"],
+        ),
 
 
 rule prepare_saint:
@@ -143,7 +147,7 @@ rule plot_saint_outputs:
     conda:
         "../environment.yml"
     input:
-        saint_annotated="data/output/saint_output_merged_annotated_{condition}.csv",
+        saint_annotated="data/output/saint_output_merged_annotated_{condition}.rds",
     output:
         plot_sp_fca="results/plot_SP_FCA_main_{condition}.png",
         plot_sp_fca_kinase="results/plot_SP_FCA_kinase_{condition}.png",

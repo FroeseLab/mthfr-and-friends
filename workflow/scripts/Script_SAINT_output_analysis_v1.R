@@ -3,7 +3,6 @@ if (exists("snakemake")) {
   fn_saint_annotated <- snakemake@input$saint_annotated
   # output
   fn_plot_sp_fca <- snakemake@output$plot_sp_fca
-  fn_plot_sp_fca_check <- snakemake@output$plot_sp_fca_check
   fn_plot_sp_fca_kinase <- snakemake@output$plot_sp_fca_kinase
   fn_plot_sp_fca_string <- snakemake@output$plot_sp_fca_string
   fn_plot_sp_fca_crapome_gradient <- snakemake@output$plot_sp_fca_crapome_gradient
@@ -11,7 +10,7 @@ if (exists("snakemake")) {
   fn_plot_heatmap <- snakemake@output$plot_heatmap
   fn_merged_saint_output <- snakemake@output$merged_saint_output
 } else {
-  fn_saint_merged <- "data/output/saint_output_merged_annotated_main.Rds"
+  fn_saint_annotated <- "data/output/saint_output_merged_annotated_MTHFR38to656.rds"
   # output
   fn_plot_sp_fca_check <- "results/tmp/plot_sp_fca_check.png"
   fn_plot_sp_fca_kinase <- "results/tmp/plot_sp_fca_kinase.png"
@@ -30,7 +29,6 @@ library(UniProt.ws)
 library(grid)
 library(gridExtra)
 library("ggrepel")
-library(UniprotR)
 library(STRINGdb)
 library(tidyverse)
 library(ggpubr)
@@ -556,8 +554,7 @@ ggsave(
   height = 15,
   width = 40,
   units = "cm",
-  dpi = 600,
-  path = "data/output"
+  dpi = 600
 )
 
 ## Heatmap [NOT IN ARTICLE]----
@@ -568,59 +565,68 @@ data_significant_Prey <- data_SAINT_merged_modified %>%
 data_significant_Prey <- unique(data_significant_Prey$Prey)
 
 # Set up plot settings
-plot_heatmap <- ggplot(
-  data = filter(data_SAINT_merged_modified, Prey %in% data_significant_Prey),
-  aes(x = Bait, y = PreyGene)
-) +
-  # Gradient scale
-  scale_fill_gradient(
-    low = "blue",
-    high = "red",
-    guide = guide_colorbar(
-      direction = "horizontal",
-      title.position = "top",
-      title.hjust = 0.5,
-      label.position = "bottom",
-      ticks = TRUE
-    ),
-  ) +
-  # Theme
-  scale_x_discrete(expand = c(0, 0)) + # Remove space on the x-axis
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = -45, hjust = 0),
-    # Tilt x-axis title
-    legend.position = "top",
-    legend.title = element_text(angle = 0, vjust = 1),
-    legend.text = element_text(angle = 0),
-    panel.background = element_rect(fill = "white"),
-    # Gray background
-    panel.grid.major = element_blank(),
-    # No major grid lines
-    panel.grid.minor = element_blank(),
-    # No minor grid lines
-    panel.border = element_rect(color = "black", fill = NA),
-    # Box around the plot
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank(),
-  )
+pdat <- data_SAINT_merged_modified %>%
+  filter(Prey %in% data_significant_Prey)
 
-# Generate different plots visualising different SAINT results
-plot_heatmap_FCA <- plot_heatmap +
-  geom_tile(aes(fill = FCA))
-plot_heatmap_FCA
+if (nrow(pdat) == 0) {
+  plot_heatmaps <- ggplot() +
+    theme_void() +
+    ggtitle("No significant interactions found")
+} else {
+  plot_heatmap <- pdat %>%
+    ggplot(
+      aes(x = Bait, y = PreyGene)
+    ) +
+    # Gradient scale
+    scale_fill_gradient(
+      low = "blue",
+      high = "red",
+      guide = guide_colorbar(
+        direction = "horizontal",
+        title.position = "top",
+        title.hjust = 0.5,
+        label.position = "bottom",
+        ticks = TRUE
+      ),
+    ) +
+    # Theme
+    scale_x_discrete(expand = c(0, 0)) + # Remove space on the x-axis
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = -45, hjust = 0),
+      # Tilt x-axis title
+      legend.position = "top",
+      legend.title = element_text(angle = 0, vjust = 1),
+      legend.text = element_text(angle = 0),
+      panel.background = element_rect(fill = "white"),
+      # Gray background
+      panel.grid.major = element_blank(),
+      # No major grid lines
+      panel.grid.minor = element_blank(),
+      # No minor grid lines
+      panel.border = element_rect(color = "black", fill = NA),
+      # Box around the plot
+      axis.title.x = element_blank(),
+      axis.title.y = element_blank(),
+    )
 
-plot_heatmap_SP <- plot_heatmap +
-  geom_tile(aes(fill = SP))
-plot_heatmap_SP
+  # Generate different plots visualising different SAINT results
+  plot_heatmap_FCA <- plot_heatmap +
+    geom_tile(aes(fill = FCA))
+  plot_heatmap_FCA
 
-plot_heatmap_Abundance <- plot_heatmap +
-  geom_tile(aes(fill = Abundance))
-plot_heatmap_Abundance
+  plot_heatmap_SP <- plot_heatmap +
+    geom_tile(aes(fill = SP))
+  plot_heatmap_SP
+
+  plot_heatmap_Abundance <- plot_heatmap +
+    geom_tile(aes(fill = Abundance))
+  plot_heatmap_Abundance
 
 
-# visualise all plots together
-plot_heatmaps <- grid.arrange(plot_heatmap_FCA, plot_heatmap_SP, plot_heatmap_Abundance, nrow = 1)
+  # visualise all plots together
+  plot_heatmaps <- grid.arrange(plot_heatmap_FCA, plot_heatmap_SP, plot_heatmap_Abundance, nrow = 1)
+}
 ggsave(
   fn_plot_heatmap,
   plot = plot_heatmaps,

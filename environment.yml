@@ -6,10 +6,8 @@ channels:
     - r
     - nodefaults
 dependencies:
-    - r-base
     - snakemake
     - pre-commit
-    - r-uniprotr
     - bioconda::bioconductor-stringdb
     - bioconda::bioconductor-uniprot.ws
     - bioconda::bioconductor-trackviewer
