@@ -1,0 +1,82 @@
+"experiment";"lane_idx";"mthfr";"band_type";"methionine";"alkaline_phosphatase";"FBS";"intensity_lane";"intensity_box";"intensity_box_bg"
+"1b";1;"WT";"Phos";200;0;"normal";1223.456;135.385;123.648
+"1b";1;"WT";"Non phos";200;0;"normal";1864.577;140.481;123.648
+"1b";1;"WT";"Degraded";200;0;"normal";1552.891;136.058;123.648
+"1b";1;"WT";"Actin";200;0;"normal";3148.477;118.883;96.172
+"1b";2;"T34A";"Non phos";200;0;"normal";11323.569;207.875;123.648
+"1b";2;"T34A";"Degraded";200;0;"normal";6240.619;169.665;123.648
+"1b";2;"T34A";"Actin";200;0;"normal";8298.74;155.28;96.172
+"1b";3;"EV";"Degraded";200;0;"normal";1707.477;136.617;123.648
+"1b";3;"EV";"Actin";200;0;"normal";3908.983;116.833;96.172
+"1c";1;"WT";"Non phos";200;1;"normal";12315.51;;
+"1c";1;"WT";"Degraded";200;1;"normal";1536.406;;
+"1c";1;"WT";"Actin";200;1;"normal";570.627;;
+"1c";2;"T34A";"Non phos";200;1;"normal";8907.811;;
+"1c";2;"T34A";"Degraded";200;1;"normal";3643.033;;
+"1c";2;"T34A";"Actin";200;1;"normal";1799.284;;
+"1c";3;"EV";"Degraded";200;1;"normal";396.627;;
+"1c";3;"EV";"Actin";200;1;"normal";290.92;;
+"1d";4;"WT";"Phos";1000;0;"normal";2154.355;;
+"1d";4;"WT";"Non phos";1000;0;"normal";733.092;;
+"1d";4;"WT";"Degraded";1000;0;"normal";126.364;;
+"1d";4;"WT";"Actin";1000;0;"normal";623.335;;
+"1d";5;"WT";"Phos";"100";0;"normal";1620.648;;
+"1d";5;"WT";"Non phos";100;0;"normal";415.556;;
+"1d";5;"WT";"Degraded";100;0;"normal";98.95;;
+"1d";5;"WT";"Actin";100;0;"normal";1173.406;;
+"1d";6;"WT";"Phos";10;0;"normal";1440.284;;
+"1d";6;"WT";"Non phos";10;0;"normal";1114.335;;
+"1d";6;"WT";"Degraded";"10";0;"normal";440.335;;
+"1d";6;"WT";"Actin";10;0;"normal";998.991;;
+"1d";7;"WT";"Phos";0;0;"normal";1534.577;;
+"1d";7;"WT";"Non phos";0;0;"normal";1675.284;;
+"1d";7;"WT";"Degraded";0;0;"normal";435.092;;
+"1d";7;"WT";"Actin";0;0;"normal";758.163;;
+"1e";1;"WT";"Phos";1000;0;"no";2942.77;;
+"1e";1;"WT";"Non phos";1000;0;"no";802.042;;
+"1e";1;"WT";"Actin";1000;0;"no";1986.062;;
+"1e";2;"WT";"Phos";0;0;"no";3923.648;;
+"1e";2;"WT";"Non phos";0;0;"no";2983.698;;
+"1e";2;"WT";"Actin";0;0;"no";2639.598;;
+"1e";3;"WT";"Phos";1000;0;"dialysed";2701.648;;
+"1e";3;"WT";"Non phos";1000;0;"dialysed";1296.749;;
+"1e";3;"WT";"Actin";1000;0;"dialysed";2450.234;;
+"1e";4;"WT";"Phos";0;0;"dialysed";4269.184;;
+"1e";4;"WT";"Non phos";0;0;"dialysed";5237.062;;
+"1e";4;"WT";"Actin";0;0;"dialysed";3281.891;;
+"1e";5;"WT";"Phos";1000;0;"normal";4352.719;;
+"1e";5;"WT";"Non phos";1000;0;"normal";2940.406;;
+"1e";5;"WT";"Actin";1000;0;"normal";2146.355;;
+"1e";6;"WT";"Phos";0;0;"normal";6132.184;;
+"1e";6;"WT";"Non phos";0;0;"normal";8169.355;;
+"1e";6;"WT";"Actin";0;0;"normal";2640.477;;
+"1f";1;"WT";"Phos";1000;0;"normal";7677.134;;
+"1f";1;"WT";"Non phos";1000;0;"normal";2905.991;;
+"1f";1;"WT";"Actin";1000;0;"normal";925.406;;
+"1f";2;"WT";"Phos";0;0;"normal";8453.255;;
+"1f";2;"WT";"Non phos";0;0;"normal";8026.012;;
+"1f";2;"WT";"Actin";0;0;"normal";683.87;;
+"1f";3;"T34A";"Phos";1000;0;"normal";0;;
+"1f";3;"T34A";"Non phos";1000;0;"normal";10513.175;;
+"1f";3;"T34A";"Actin";1000;0;"normal";1247.062;;
+"1f";4;"T34A";"Phos";0;0;"normal";0;;
+"1f";4;"T34A";"Non phos";0;0;"normal";9333.64;;
+"1f";4;"T34A";"Actin";0;0;"normal";620.163;;
+"1f";5;"EV";"Phos";1000;0;"normal";0;;
+"1f";5;"EV";"Non phos";1000;0;"normal";0;;
+"1f";5;"EV";"Actin";1000;0;"normal";889.82;;
+"1f";6;"EV";"Phos";0;0;"normal";0;;
+"1f";6;"EV";"Non phos";0;0;"normal";0;;
+"1f";6;"EV";"Actin";0;0;"normal";934.234;;
+"sup3";1;"WT";"Phos";1000;0;"dialysed";4474.134;;
+"sup3";1;"WT";"Non phos";1000;0;"dialysed";3367.991;;
+"sup3";1;"WT";"Actin";1000;0;"dialysed";2212.598;;
+"sup3";2;"WT";"Phos";0;0;"dialysed";4495.426;;
+"sup3";2;"WT";"Non phos";0;0;"dialysed";4341.82;;
+"sup3";2;"WT";"Actin";0;0;"dialysed";1945.77;;
+"sup3";3;"WT";"Phos";1000;0;"no";4755.569;;
+"sup3";3;"WT";"Non phos";1000;0;"no";1243.627;;
+"sup3";3;"WT";"Actin";1000;0;"no";2444.477;;
+"sup3";4;"WT";"Phos";0;0;"no";3730.083;;
+"sup3";4;"WT";"Non phos";0;0;"no";3702.062;;
+"sup3";4;"WT";"Actin";0;0;"no";2286.355;;
