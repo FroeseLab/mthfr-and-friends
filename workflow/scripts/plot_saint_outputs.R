@@ -8,7 +8,6 @@ if (exists("snakemake")) {
   fn_plot_sp_fca_crapome_gradient <- snakemake@output$plot_sp_fca_crapome_gradient
   fn_plot_sp_fca_crapome <- snakemake@output$plot_sp_fca_crapome
   fn_plot_heatmap <- snakemake@output$plot_heatmap
-  fn_merged_saint_output <- snakemake@output$merged_saint_output
 } else {
   fn_saint_annotated <- "data/output/saint_output_merged_annotated_MTHFR38to656.rds"
   # output
@@ -25,7 +24,6 @@ library(ggplot2)
 library(dplyr)
 library(readr)
 library(stringr)
-library(UniProt.ws)
 library(grid)
 library(gridExtra)
 library("ggrepel")
