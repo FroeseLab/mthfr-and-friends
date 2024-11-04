@@ -1,5 +1,8 @@
 containerized: "docker://votti/mthfr-and-friends:v0.1.0"
+
+
 import shutil
+
 
 rule all:
     input:
@@ -13,6 +16,13 @@ rule all:
         ),
         "results/upset_plot_SAINT_input.png",
         "results/upset_SAINT_output_SP_0.95_FCA_2.png",
+        # densiometry
+        fn_phos_unphos="results/interim/densiometry_phos_unphos.png",
+        fn_fbs="results/interim/densiometry_fbs.png",
+        fn_wb_1e="results/interim/densiometry_wb_1e.png",
+        fn_wb_1d="results/interim/densiometry_wb_1d.png",
+        fn_wb_1f="results/interim/densiometry_wb_1f.png",
+        fn_wb_1esup3="results/interim/densiometry_wb_1esup3.png",
 
 
 rule prepare_saint:
@@ -166,6 +176,22 @@ rule plot_venn:
         ),
     script:
         "scripts/plot_venn_graph.R"
+
+
+rule wb_densiometry:
+    conda:
+        "../environment.yml"
+    input:
+        fn_summary="resources/raw/20240111_denisiometry_summarized.csv",
+    output:
+        fn_phos_unphos="results/interim/densiometry_phos_unphos.png",
+        fn_fbs="results/interim/densiometry_fbs.png",
+        fn_wb_1e="results/interim/densiometry_wb_1e.png",
+        fn_wb_1d="results/interim/densiometry_wb_1d.png",
+        fn_wb_1f="results/interim/densiometry_wb_1f.png",
+        fn_wb_1esup3="results/interim/densiometry_wb_1esup3.png",
+    script:
+        "scripts/densiometry.R"
 
 
 rule string_db_cache:
